@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeAnalysisBtn = document.getElementById('close-analysis');
     const reportIdSpan = document.getElementById('report-id');
     const forensicImageContainer = document.getElementById('forensic-image-container');
+    const ocrTable = document.getElementById('ocr-table');
 
     // Telemetry Elements
     const sysLoadSpan = document.getElementById('sys-load');
@@ -202,6 +203,15 @@ document.addEventListener('DOMContentLoaded', () => {
             forensicImageContainer.innerHTML = `
                 <img src="${data.ela_heatmap}" style="max-width:100%; max-height:100%; object-fit:contain; border: 1px solid #94A3B8;">
             `;
+            
+            // Render the REAL OCR data
+            if (data.extracted_text && data.extracted_text.length > 0) {
+                ocrTable.innerHTML = data.extracted_text.map((text, idx) => `
+                    <tr><td>STRING_${idx.toString().padStart(3, '0')}</td><td style="color:#0F172A; font-weight:bold;">${text}</td><td class="status-ok">EXTRACTED</td></tr>
+                `).join('');
+            } else {
+                ocrTable.innerHTML = `<tr><td colspan="3" class="alert-text">NO TEXT DETECTED IN DOCUMENT</td></tr>`;
+            }
         } else {
             // Render the fake placeholder
             forensicImageContainer.innerHTML = `
@@ -214,6 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="heatmap-overlay"></div>
                 </div>
+            `;
+            
+            ocrTable.innerHTML = `
+                <tr><td>MRZ_CHECKSUM</td><td>PASS</td><td class="status-ok">VERIFIED</td></tr>
+                <tr><td>EXPIRATION_GATE</td><td>FAIL</td><td class="alert-text">EXPIRED</td></tr>
+                <tr><td colspan="3" style="color:#64748B;">[SIMULATED API_GATEWAY DATA]</td></tr>
             `;
         }
         
