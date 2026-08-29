@@ -149,15 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- BACKGROUND SIMULATION ---
-    setInterval(async () => {
-        if (!dashboardView.classList.contains('hidden') && detailedAnalysis.classList.contains('hidden')) {
-            try {
-                await fetch('http://localhost:8000/api/simulate_gateway', { method: 'POST' });
-                refreshData(); 
-            } catch(err) {}
-        }
-    }, 12000); 
+    // --- BACKGROUND SIMULATION REMOVED ---
+    // (The system will now only show real, manual uploads) 
 
     // --- DETAILED ANALYSIS LOGIC ---
     closeAnalysisBtn.addEventListener('click', () => {
