@@ -204,14 +204,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img src="${data.ela_heatmap}" style="max-width:100%; max-height:100%; object-fit:contain; border: 1px solid #94A3B8;">
             `;
             
-            // Render the REAL OCR data
+            // Render the REAL OCR data and MRZ Status
+            let tableHTML = '';
+            
+            // Add MRZ Verification Row
+            const mrzStatus = data.metadata_checks?.mrz || 'NOT_FOUND';
+            const mrzDetails = data.metadata_checks?.mrz_details || '';
+            let statusColor = mrzStatus === 'PASS' ? 'status-ok' : (mrzStatus === 'FAIL' ? 'alert-text' : 'status-ok');
+            
+            tableHTML += `<tr>
+                <td style="color:#3B82F6;">SYS_MRZ_CHECKSUM</td>
+                <td style="font-weight:bold; color:#0F172A;">${mrzDetails}</td>
+                <td class="${statusColor}">${mrzStatus}</td>
+            </tr>`;
+            
             if (data.extracted_text && data.extracted_text.length > 0) {
-                ocrTable.innerHTML = data.extracted_text.map((text, idx) => `
-                    <tr><td>STRING_${idx.toString().padStart(3, '0')}</td><td style="color:#0F172A; font-weight:bold;">${text}</td><td class="status-ok">EXTRACTED</td></tr>
+                tableHTML += data.extracted_text.map((text, idx) => `
+                    <tr><td>STRING_${idx.toString().padStart(3, '0')}</td><td style="color:#64748B;">${text}</td><td class="status-ok">EXTRACTED</td></tr>
                 `).join('');
             } else {
-                ocrTable.innerHTML = `<tr><td colspan="3" class="alert-text">NO TEXT DETECTED IN DOCUMENT</td></tr>`;
+                tableHTML += `<tr><td colspan="3" class="alert-text">NO TEXT DETECTED IN DOCUMENT</td></tr>`;
             }
+            
+            ocrTable.innerHTML = tableHTML;
+
         } else {
             // Render the fake placeholder
             forensicImageContainer.innerHTML = `
