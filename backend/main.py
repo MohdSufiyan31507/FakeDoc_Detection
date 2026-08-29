@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 import cv2
 import numpy as np
@@ -39,7 +39,6 @@ def init_db():
             doc_type TEXT
         )
     """)
-    # Add doc_type column if it doesn't exist (for seamless upgrade)
     try:
         cursor.execute("ALTER TABLE documents ADD COLUMN doc_type TEXT")
     except:
@@ -230,7 +229,6 @@ def calculate_mrz_checksum(data_str):
     return total % 10
 
 def analyze_document_data(ocr_text_list):
-    """Identifies Aadhaar, PAN, Passport, DL, Voter ID and validates syntax"""
     full_text = " ".join(ocr_text_list).upper()
     
     doc_type = "UNKNOWN DOCUMENT"
@@ -317,8 +315,9 @@ def calculate_final_risk(confidence, doc_status, has_bad_exif, is_recapture):
     else:
         return total_risk, "APPROVED"
 
+
 @app.post("/api/analyze")
-async def analyze_document(file: UploadFile = File(...)):
+async def analyze_document(file: UploadFile = File(...), expected_type: str = Form(None)):
     contents = await file.read()
     
     try:
@@ -333,6 +332,16 @@ async def analyze_document(file: UploadFile = File(...)):
         # OCR & Classification
         extracted_text_list = perform_ocr(doc_img)
         doc_type, doc_status, doc_details = analyze_document_data(extracted_text_list)
+        
+        # Cross-Check Expected Type vs Detected Type
+        if expected_type and doc_type != "UNKNOWN DOCUMENT":
+            # Normalizing strings to see if expected type matches OCR type
+            exp_clean = expected_type.upper().replace(" ", "")
+            det_clean = doc_type.upper().replace(" ", "")
+            
+            if exp_clean not in det_clean and det_clean not in exp_clean:
+                doc_status = "FAIL"
+                doc_details = f"MISMATCH: Expected {expected_type} but detected a {doc_type}."
         
         # Biometrics
         extracted_face_b64 = extract_face(doc_img)

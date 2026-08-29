@@ -104,7 +104,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- UPLOAD LOGIC ---
-    uploadZone.addEventListener('click', () => fileInput.click());
+    let expectedType = null;
+    const docCards = document.querySelectorAll('.doc-card');
+
+    docCards.forEach(card => {
+        card.addEventListener('click', () => {
+            // Reset all borders
+            docCards.forEach(c => c.style.border = '1px solid #E2E8F0');
+            // Highlight clicked card
+            card.style.border = '2px solid #3B82F6';
+            
+            expectedType = card.getAttribute('data-type');
+            
+            // Auto-trigger file upload
+            fileInput.click();
+        });
+    });
+
+    uploadZone.addEventListener('click', () => {
+        // Reset expected type if they click the generic box
+        expectedType = null;
+        docCards.forEach(c => c.style.border = '1px solid #E2E8F0');
+        fileInput.click();
+    });
+
     fileInput.addEventListener('change', async (e) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
@@ -116,6 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const formData = new FormData();
             formData.append('file', file);
+            if (expectedType) {
+                formData.append('expected_type', expectedType);
+            }
 
             try {
                 const response = await fetch('http://localhost:8000/api/analyze', {
@@ -130,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     uploadZone.innerHTML = `
                         <p>Analysis Complete!</p>
-                        <span class="upload-subtext" style="color:#10B981;">Click here to upload another document</span>
+                        <span class="upload-subtext" style="color:#10B981;">Click a card above to upload another document</span>
                     `;
                 } else {
                     uploadZone.innerHTML = `
@@ -146,6 +172,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
             fileInput.value = '';
+            
+            // Reset cards after upload finishes
+            setTimeout(() => {
+                docCards.forEach(c => c.style.border = '1px solid #E2E8F0');
+                expectedType = null;
+            }, 2000);
         }
     });
 
