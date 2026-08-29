@@ -63,6 +63,38 @@ def perform_ocr(image_bytes):
             
     return extracted_text
 
+def extract_face(image_bytes):
+    """
+    Uses OpenCV Haar Cascades to detect and crop the largest face in the document.
+    Returns Base64 string of the cropped face, or None if no face is found.
+    """
+    try:
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        
+        if len(faces) == 0:
+            return None
+            
+        # Get largest face (usually the main ID photo)
+        largest_face = max(faces, key=lambda rect: rect[2] * rect[3])
+        x, y, w, h = largest_face
+        
+        # Add slight padding around face
+        pad = int(w * 0.1)
+        y1, y2 = max(0, y-pad), min(img.shape[0], y+h+pad)
+        x1, x2 = max(0, x-pad), min(img.shape[1], x+w+pad)
+        
+        face_img = img[y1:y2, x1:x2]
+        _, buffer = cv2.imencode('.jpg', face_img)
+        return "data:image/jpeg;base64," + base64.b64encode(buffer).decode('utf-8')
+    except Exception as e:
+        print(f"Face extraction error: {e}")
+        return None
+
 # --- MILESTONE 8: MRZ MATH VALIDATION ---
 def get_mrz_character_value(char):
     if '0' <= char <= '9':
@@ -126,6 +158,7 @@ async def analyze_document(file: UploadFile = File(...)):
     try:
         ela_b64, confidence, variance = perform_ela(contents)
         extracted_text_list = perform_ocr(contents)
+        extracted_face_b64 = extract_face(contents)
         
         # Run Milestone 8 MRZ Logic
         mrz_status, mrz_details = validate_mrz_logic(extracted_text_list)
@@ -139,6 +172,7 @@ async def analyze_document(file: UploadFile = File(...)):
             "doc_id": "DOC-REAL-" + str(random.randint(1000, 9999)),
             "filename": file.filename,
             "ela_heatmap": "data:image/jpeg;base64," + ela_b64,
+            "extracted_face": extracted_face_b64,
             "confidence_score": f"{confidence:.1f}%",
             "decision": status,
             "is_flagged": is_flagged,

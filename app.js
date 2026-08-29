@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reportIdSpan = document.getElementById('report-id');
     const forensicImageContainer = document.getElementById('forensic-image-container');
     const ocrTable = document.getElementById('ocr-table');
+    const extractedFaceBox = document.getElementById('extracted-face-box');
 
     // Telemetry Elements
     const sysLoadSpan = document.getElementById('sys-load');
@@ -228,6 +229,16 @@ document.addEventListener('DOMContentLoaded', () => {
             
             ocrTable.innerHTML = tableHTML;
 
+            // Render REAL Extracted Face
+            if (data.extracted_face) {
+                extractedFaceBox.innerHTML = `<img src="${data.extracted_face}" style="max-width:100%; max-height:100%; object-fit:cover;">`;
+                extractedFaceBox.style.padding = '0'; // remove padding so image fills box
+            } else {
+                extractedFaceBox.innerHTML = `NO FACE<br>DETECTED`;
+                extractedFaceBox.style.padding = ''; 
+                extractedFaceBox.style.color = '#EF4444'; // Red alert text
+            }
+
         } else {
             // Render the fake placeholder
             forensicImageContainer.innerHTML = `
@@ -247,6 +258,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr><td>EXPIRATION_GATE</td><td>FAIL</td><td class="alert-text">EXPIRED</td></tr>
                 <tr><td colspan="3" style="color:#64748B;">[SIMULATED API_GATEWAY DATA]</td></tr>
             `;
+            
+            extractedFaceBox.innerHTML = `EXTRACTED<br>FACE`;
+            extractedFaceBox.style.padding = '';
+            extractedFaceBox.style.color = '';
         }
         
         mainSplitPane.classList.add('hidden');
