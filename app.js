@@ -196,6 +196,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="${statusColor}">${mrzStatus}</td>
             </tr>`;
             
+            const exifDetails = data.metadata_checks?.exif || 'NOT_FOUND';
+            let exifColor = exifDetails.includes('SOFTWARE_SIG_DETECTED') ? 'alert-text' : (exifDetails.includes('CLEAN') ? 'status-ok' : 'alert-text');
+            tableHTML += `<tr>
+                <td style="color:#8B5CF6;">EXIF_METADATA</td>
+                <td style="font-weight:bold; color:#0F172A;">${exifDetails}</td>
+                <td class="${exifColor}">${exifDetails.includes('CLEAN') ? 'PASS' : 'FLAGGED'}</td>
+            </tr>`;
+            
+            const moireDetails = data.metadata_checks?.moire || 'NOT_FOUND';
+            let moireColor = moireDetails.includes('SCREEN_RECAPTURE') ? 'alert-text' : 'status-ok';
+            tableHTML += `<tr>
+                <td style="color:#10B981;">FFT_MOIRE_DETECTION</td>
+                <td style="font-weight:bold; color:#0F172A;">${moireDetails}</td>
+                <td class="${moireColor}">${moireDetails.includes('NATURAL') ? 'PASS' : 'FLAGGED'}</td>
+            </tr>`;
+            
             if (data.extracted_text && data.extracted_text.length > 0) {
                 tableHTML += data.extracted_text.map((text, idx) => `
                     <tr><td>STRING_${idx.toString().padStart(3, '0')}</td><td style="color:#64748B;">${text}</td><td class="status-ok">EXTRACTED</td></tr>
