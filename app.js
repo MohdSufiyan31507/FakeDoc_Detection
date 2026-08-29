@@ -16,26 +16,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeAnalysisBtn = document.getElementById('close-analysis');
     const reportIdSpan = document.getElementById('report-id');
 
-    // Handle Navigation
+    // Telemetry Elements
+    const sysLoadSpan = document.getElementById('sys-load');
+    const tickCounterSpan = document.getElementById('tick-counter');
+    let tickCount = 0;
+
+    // --- NAVIGATION LOGIC ---
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            // Remove active from all
             navLinks.forEach(l => l.classList.remove('active'));
-            // Add active to clicked
             link.classList.add('active');
             
-            // Hide all views
             views.forEach(view => view.classList.add('hidden'));
             
-            // Show target view
             const targetId = link.getAttribute('data-target');
             document.getElementById(targetId).classList.remove('hidden');
 
-            // Update Header
             topBarTitle.textContent = link.textContent.replace(/\[.*?\]/, '').trim();
-
-            // Special case: if returning to dashboard, ensure split pane is visible and analysis is hidden
             if (targetId === 'dashboard-view') {
                 mainSplitPane.classList.remove('hidden');
                 detailedAnalysis.classList.add('hidden');
@@ -43,89 +41,92 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-
-    // Trigger file selection on click
-    uploadZone.addEventListener('click', () => {
-        fileInput.click();
-    });
-
-    // Handle file selection and mock AI analysis
+    // --- UPLOAD LOGIC ---
+    uploadZone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             const fileName = e.target.files[0].name;
-            
-            // UI Feedback for ingestion
             uploadZone.innerHTML = `
-                <p>FILE SELECTED</p>
+                <p>INITIALIZING</p>
                 <span class="upload-subtext">${fileName.toUpperCase()}</span>
-                <span style="display:block; margin-top:16px; font-weight:bold; color:#E74C3C;">[ AWAITING INGESTION ]</span>
+                <span style="display:block; margin-top:16px; font-weight:bold; color:#0284C7;">[ AWAITING GATE ]</span>
             `;
 
-            // Simulate AI processing delay
             setTimeout(() => {
-                // Mock a response
-                const isFlagged = Math.random() > 0.5;
-                const mockId = 'DOC-' + Math.floor(Math.random() * 10000);
-                
-                // Get current time like HH:MM:SS
-                const now = new Date();
-                const timeString = now.toTimeString().split(' ')[0];
-                const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
-                const confScore = (Math.random() * 100).toFixed(1) + '%';
-                
-                const status = isFlagged ? 'MANUAL_REVIEW' : 'CLEARED';
-                
-                // Construct the new row
-                const tr = document.createElement('tr');
-                tr.classList.add('interactive-row');
-                tr.dataset.id = mockId;
-                
-                if (isFlagged) {
-                    tr.classList.add('flagged');
-                }
-                
-                tr.innerHTML = `
-                    <td>${mockId}</td>
-                    <td>${timestamp}</td>
-                    <td>UNKNOWN_FORMAT</td>
-                    <td>${confScore}</td>
-                    <td>${status}</td>
-                `;
-                
-                // Add click listener to the new row
-                tr.addEventListener('click', () => openDetailedAnalysis(mockId));
-
-                // Prepend to the table
-                tbody.prepend(tr);
-
-                // Add to Audit Log
-                const logEntry = document.createElement('div');
-                logEntry.className = 'log-entry';
-                logEntry.innerHTML = `<span class="log-time">[${timeString}]</span> <span class="log-sys">SYS</span>: Ingested ${mockId} (${fileName}). AI_Score: ${confScore}. Route: ${status}`;
-                logTerminal.prepend(logEntry);
-
-                // Reset Upload Zone
+                injectDocument(true);
                 uploadZone.innerHTML = `
-                    <p>SELECT OR DROP TARGET FILE</p>
-                    <span class="upload-subtext">SUPPORTED: JPG, PNG, PDF | MAX 10MB</span>
-                    <span style="display:block; margin-top:16px; font-weight:bold; color:#2ECC71;">[ PREVIOUS INGESTION COMPLETE ]</span>
+                    <p>INITIALIZE UPLOAD</p>
+                    <span class="upload-subtext">CLICK OR DROP FILE HERE</span>
+                    <span style="display:block; margin-top:16px; font-weight:bold; color:#10B981;">[ PREVIOUS PASS ]</span>
                 `;
-                
                 fileInput.value = '';
-
-            }, 2000);
+            }, 1500);
         }
     });
 
-    // Attach click listeners to existing dashboard rows
-    const existingRows = document.querySelectorAll('#dashboard-view .interactive-row');
-    existingRows.forEach(row => {
-        row.addEventListener('click', () => {
-            openDetailedAnalysis(row.dataset.id);
-        });
-    });
+    // --- LIVE TELEMETRY SIMULATION ---
+    
+    // 1. Simulate fluctuating CPU Load
+    setInterval(() => {
+        const baseLoad = 40;
+        const variance = (Math.random() * 15) - 5; 
+        sysLoadSpan.textContent = (baseLoad + variance).toFixed(1) + '%';
+        tickCount++;
+        tickCounterSpan.textContent = tickCount;
+    }, 1000);
 
-    // Handle closing the analysis view
+    // 2. Simulate Live Incoming Stream (every 5-10 seconds)
+    setInterval(() => {
+        // Only inject if Dashboard is active and not currently in Detailed Analysis
+        if (!document.getElementById('dashboard-view').classList.contains('hidden') && 
+            detailedAnalysis.classList.contains('hidden')) {
+            injectDocument(false);
+        }
+    }, Math.floor(Math.random() * 5000) + 5000); // random interval between 5s and 10s
+
+
+    function injectDocument(isManual) {
+        const isFlagged = Math.random() > 0.6; // 40% chance of being flagged
+        const mockId = 'DOC-' + Math.floor(Math.random() * 100000);
+        
+        const now = new Date();
+        const timeString = now.toTimeString().split(' ')[0];
+        const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
+        const confScore = (Math.random() * 100).toFixed(1) + '%';
+        
+        const status = isFlagged ? 'QUARANTINE_L1' : 'SYS_CLEARED';
+        const source = isManual ? 'MANUAL_OVERRIDE' : 'API_GATEWAY';
+        
+        const tr = document.createElement('tr');
+        tr.classList.add('interactive-row');
+        tr.dataset.id = mockId;
+        if (isFlagged) tr.classList.add('flagged');
+        
+        tr.innerHTML = `
+            <td>${mockId}</td>
+            <td>${timestamp}</td>
+            <td>${source}</td>
+            <td>${confScore}</td>
+            <td>${status}</td>
+        `;
+        
+        tr.addEventListener('click', () => openDetailedAnalysis(mockId));
+        
+        // Remove oldest row if table gets too long (keep last 10)
+        if (tbody.children.length >= 10) {
+            tbody.removeChild(tbody.lastChild);
+        }
+        
+        tbody.prepend(tr);
+
+        // Update Audit Log
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        logEntry.innerHTML = `<span class="log-time">[${timeString}]</span> <span class="log-sys">SYS_GATE</span>: Event ${mockId} (${source}). CONF: ${confScore}. ROUTE: ${status}`;
+        logTerminal.prepend(logEntry);
+    }
+
+    // --- DETAILED ANALYSIS LOGIC ---
     closeAnalysisBtn.addEventListener('click', () => {
         detailedAnalysis.classList.add('hidden');
         mainSplitPane.classList.remove('hidden');
@@ -135,5 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
         reportIdSpan.textContent = docId;
         mainSplitPane.classList.add('hidden');
         detailedAnalysis.classList.remove('hidden');
+    }
+
+    // Populate initial rows
+    for(let i=0; i<3; i++) {
+        injectDocument(false);
     }
 });

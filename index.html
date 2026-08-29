@@ -11,72 +11,88 @@
         <!-- Sidebar Navigation -->
         <nav class="sidebar">
             <div class="brand">FAKEDOC_SYS // v1.0.4</div>
-            <ul class="nav-links">
-                <li><a href="#" class="nav-link active" data-target="dashboard-view">Screening Dashboard</a></li>
-                <li><a href="#" class="nav-link" data-target="queue-view">Review Queue [42]</a></li>
-                <li><a href="#" class="nav-link" data-target="audit-view">Audit Log</a></li>
-            </ul>
-            <div class="sys-status">
-                <span class="status-indicator online"></span> AI_ENGINE: ONLINE
+            <div class="sys-status" style="border-bottom: 1px solid #334155; border-top: none;">
+                <span class="status-indicator online" id="global-status-led"></span> 
+                <span id="global-status-text">AI_ENGINE: ONLINE</span>
             </div>
+            <ul class="nav-links">
+                <li><a href="#" class="nav-link active" data-target="dashboard-view">Live Telemetry</a></li>
+                <li><a href="#" class="nav-link" data-target="queue-view">Review Queue <span class="badge" id="queue-count">42</span></a></li>
+                <li><a href="#" class="nav-link" data-target="audit-view">Audit Ledger</a></li>
+            </ul>
         </nav>
 
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
-                <h1 id="top-bar-title">Screening Dashboard</h1>
-                <div class="user-info">Analyst ID: 9482A</div>
+                <h1 id="top-bar-title">Live Telemetry</h1>
+                <div class="user-info">SESSION: ANALYST_9482A | NODE: US-EAST-1</div>
             </header>
 
             <!-- 1. DASHBOARD VIEW -->
             <div class="content-area" id="dashboard-view">
+                
+                <!-- NEW: METRICS RIBBON -->
+                <div class="metrics-ribbon">
+                    <div class="metric-box">
+                        <span class="metric-label">NODE_CPU_LOAD</span>
+                        <span class="metric-value" id="sys-load">42.1%</span>
+                        <span class="metric-trend up">▲ TICK: <span id="tick-counter">0</span></span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">24H_INGESTION_VOL</span>
+                        <span class="metric-value">1,492</span>
+                        <span class="metric-trend up">▲ +14% vs 24h</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">CRITICAL_FLAGS</span>
+                        <span class="metric-value alert-text">108</span>
+                        <span class="metric-trend down">▼ -1.2% vs 24h</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">SYS_ACCURACY_CONF</span>
+                        <span class="metric-value">98.4%</span>
+                        <span class="metric-trend neutral">▶ STABLE</span>
+                    </div>
+                </div>
+
                 <!-- Split Pane Layout -->
                 <div class="split-pane" id="main-split-pane">
-                    <!-- Left: Ingestion -->
+                    <!-- Left: Ingestion & Filters -->
                     <div class="pane ingestion-pane">
-                        <h2>Document Ingestion</h2>
+                        <h2>MANUAL INGESTION</h2>
                         <div class="upload-zone" id="upload-zone">
-                            <p>SELECT OR DROP TARGET FILE</p>
-                            <span class="upload-subtext">SUPPORTED: JPG, PNG, PDF | MAX 10MB</span>
+                            <p>INITIALIZE UPLOAD</p>
+                            <span class="upload-subtext">CLICK OR DROP FILE HERE</span>
                             <input type="file" id="file-input" hidden>
+                        </div>
+                        
+                        <h2 style="margin-top: 24px;">STREAM FILTERS</h2>
+                        <div class="filter-group">
+                            <label><input type="checkbox" checked> SHOW_CLEARED</label>
+                            <label><input type="checkbox" checked> SHOW_FLAGGED</label>
+                            <label><input type="checkbox" checked> STREAM_AUTO_REFRESH</label>
                         </div>
                     </div>
 
                     <!-- Right: Active Stream / Data -->
                     <div class="pane data-pane">
-                        <h2>Recent Ingestions (Click to Analyze)</h2>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
+                            <h2 style="margin: 0; border: none;">LIVE INGESTION STREAM</h2>
+                            <span style="font-size: 11px; font-weight: bold; color: #10B981; font-family: Consolas;">● STREAM_ACTIVE</span>
+                        </div>
                         <table class="data-table" id="recent-ingestions-table">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>DOC_ID</th>
                                     <th>TIMESTAMP</th>
-                                    <th>DOC_TYPE</th>
-                                    <th>CONFIDENCE</th>
-                                    <th>STATUS</th>
+                                    <th>SOURCE_TYPE</th>
+                                    <th>AI_CONFIDENCE</th>
+                                    <th>DECISION_GATE</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="flagged interactive-row" data-id="DOC-8492">
-                                    <td>DOC-8492</td>
-                                    <td>2026-08-29 14:02:11</td>
-                                    <td>PASSPORT_US</td>
-                                    <td>42.1%</td>
-                                    <td>MANUAL_REVIEW</td>
-                                </tr>
-                                <tr class="interactive-row" data-id="DOC-8491">
-                                    <td>DOC-8491</td>
-                                    <td>2026-08-29 13:58:44</td>
-                                    <td>ID_CA</td>
-                                    <td>98.7%</td>
-                                    <td>CLEARED</td>
-                                </tr>
-                                <tr class="flagged interactive-row" data-id="DOC-8490">
-                                    <td>DOC-8490</td>
-                                    <td>2026-08-29 13:55:01</td>
-                                    <td>PASSPORT_UK</td>
-                                    <td>12.4%</td>
-                                    <td>REJECTED_FORGERY</td>
-                                </tr>
+                                <!-- Rows will be injected here by app.js -->
                             </tbody>
                         </table>
                     </div>
@@ -85,13 +101,16 @@
                 <!-- Detailed Analysis View (Hidden by default) -->
                 <div class="detailed-analysis hidden" id="detailed-analysis">
                     <div class="analysis-header">
-                        <h2>ANALYSIS REPORT: <span id="report-id">DOC-XXXX</span></h2>
-                        <button id="close-analysis" class="util-btn">[X] CLOSE REPORT</button>
+                        <div>
+                            <h2>DEEP ANALYSIS: <span id="report-id">DOC-XXXX</span></h2>
+                            <span style="font-family: Consolas; font-size: 12px; color: #64748B;">LOCKED FOR REVIEW BY: ANALYST_9482A</span>
+                        </div>
+                        <button id="close-analysis" class="util-btn">DISENGAGE [X]</button>
                     </div>
                     
                     <div class="analysis-grid">
                         <div class="analysis-card">
-                            <h3>VISUAL EVIDENCE (ELA)</h3>
+                            <h3>FORENSIC IMAGING (ELA)</h3>
                             <div class="image-mockup">
                                 <div class="id-card-base">
                                     <div class="id-photo"></div>
@@ -104,49 +123,49 @@
                                 </div>
                             </div>
                             <div class="metric-row">
-                                <span>Clone Stamping:</span>
-                                <span class="alert-text">DETECTED (92%)</span>
+                                <span>Error Level Variance:</span>
+                                <span class="alert-text">DELTA_HIGH (92%)</span>
                             </div>
                             <div class="metric-row">
-                                <span>Compression Variance:</span>
-                                <span class="alert-text">HIGH (POSSIBLE EDIT)</span>
+                                <span>Pixel Consistency:</span>
+                                <span class="alert-text">FAIL_SIG_29</span>
                             </div>
                         </div>
 
                         <div class="analysis-card">
-                            <h3>METADATA EXTRACTION</h3>
+                            <h3>METADATA CROSS-REFERENCE</h3>
                             <table class="meta-table">
-                                <tr><td>LAST_NAME</td><td>DOE</td><td class="status-ok">OK</td></tr>
-                                <tr><td>FIRST_NAME</td><td>JOHN</td><td class="status-ok">OK</td></tr>
-                                <tr><td>DOB</td><td>1985-04-12</td><td class="status-ok">OK</td></tr>
-                                <tr><td>EXP_DATE</td><td>2021-09-01</td><td class="alert-text">EXPIRED</td></tr>
-                                <tr><td>ID_NUMBER</td><td>A9482910</td><td class="alert-text">CHECKSUM_FAIL</td></tr>
+                                <tr><td>MRZ_CHECKSUM</td><td>PASS</td><td class="status-ok">VERIFIED</td></tr>
+                                <tr><td>DOB_LOGIC</td><td>PASS</td><td class="status-ok">VERIFIED</td></tr>
+                                <tr><td>EXPIRATION_GATE</td><td>FAIL</td><td class="alert-text">EXPIRED</td></tr>
+                                <tr><td>GEO_IP_MATCH</td><td>FAIL</td><td class="alert-text">MISMATCH_LOC</td></tr>
+                                <tr><td>DB_WATCHLIST</td><td>PASS</td><td class="status-ok">CLEAR</td></tr>
                             </table>
                         </div>
 
                         <div class="analysis-card">
-                            <h3>BIOMETRIC MATCH</h3>
+                            <h3>BIOMETRIC TOPOLOGY</h3>
                             <div class="biometric-visual">
-                                <div class="bio-box">ID PHOTO</div>
-                                <div class="bio-connector">◄ MISMATCH (42%) ►</div>
-                                <div class="bio-box">SELFIE</div>
+                                <div class="bio-box">EXTRACTED<br>FACE</div>
+                                <div class="bio-connector">◄ DELTA 42% ►</div>
+                                <div class="bio-box">LIVENESS<br>CAPTURE</div>
                             </div>
                             <div class="metric-row">
-                                <span>Liveness Score:</span>
+                                <span>Liveness Mesh:</span>
                                 <span class="status-ok">PASS (98%)</span>
                             </div>
                             <div class="metric-row">
-                                <span>Face Match:</span>
+                                <span>Nodal Match:</span>
                                 <span class="alert-text">FAIL (42%)</span>
                             </div>
                         </div>
                         
                         <div class="analysis-card decision-panel">
-                            <h3>ANALYST DECISION</h3>
+                            <h3>ANALYST OVERRIDE GATE</h3>
                             <div class="btn-group">
-                                <button class="action-btn reject">REJECT: FORGERY</button>
-                                <button class="action-btn reject">REJECT: EXPIRED</button>
-                                <button class="action-btn approve">OVERRIDE & APPROVE</button>
+                                <button class="action-btn reject">BLOCK: FRAUD</button>
+                                <button class="action-btn reject">BLOCK: DOC_ERROR</button>
+                                <button class="action-btn approve">FORCE APPROVE</button>
                             </div>
                         </div>
                     </div>
@@ -156,42 +175,42 @@
             <!-- 2. QUEUE VIEW -->
             <div class="content-area hidden" id="queue-view">
                 <div class="view-header">
-                    <h2>MANUAL REVIEW QUEUE</h2>
+                    <h2>PENDING MANUAL REVIEW</h2>
                     <div class="util-actions">
-                        <button class="util-btn">SELECT ALL</button>
-                        <button class="action-btn approve">APPROVE SELECTED</button>
-                        <button class="action-btn reject">REJECT SELECTED</button>
+                        <button class="util-btn">SELECT_ALL</button>
+                        <button class="action-btn approve">BATCH_APPROVE</button>
+                        <button class="action-btn reject">BATCH_REJECT</button>
                     </div>
                 </div>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>[X]</th>
-                            <th>ID</th>
-                            <th>FLAG_REASON</th>
+                            <th>[ ]</th>
+                            <th>DOC_ID</th>
+                            <th>FLAG_CODE</th>
                             <th>CONFIDENCE</th>
-                            <th>WAIT_TIME</th>
+                            <th>QUEUE_TIME</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr class="interactive-row">
                             <td><input type="checkbox"></td>
                             <td>DOC-8492</td>
-                            <td>CLONE_STAMP_DETECTED</td>
+                            <td>ERR_CLONE_STAMP</td>
                             <td>42.1%</td>
                             <td>14m 22s</td>
                         </tr>
                         <tr class="interactive-row">
                             <td><input type="checkbox"></td>
                             <td>DOC-8470</td>
-                            <td>FACE_MISMATCH</td>
+                            <td>ERR_FACE_MISMATCH</td>
                             <td>19.8%</td>
                             <td>45m 10s</td>
                         </tr>
                         <tr class="interactive-row">
                             <td><input type="checkbox"></td>
                             <td>DOC-8461</td>
-                            <td>EXPIRED_DOCUMENT</td>
+                            <td>ERR_EXPIRED</td>
                             <td>99.1%</td>
                             <td>1h 04m</td>
                         </tr>
@@ -202,17 +221,11 @@
             <!-- 3. AUDIT LOG VIEW -->
             <div class="content-area hidden" id="audit-view">
                 <div class="view-header">
-                    <h2>IMMUTABLE AUDIT LOG</h2>
-                    <button class="util-btn">EXPORT CSV</button>
+                    <h2>SYSTEM AUDIT LEDGER</h2>
+                    <button class="util-btn">EXPORT_CSV</button>
                 </div>
                 <div class="log-terminal" id="log-terminal">
-                    <div class="log-entry"><span class="log-time">[14:02:11]</span> <span class="log-sys">SYS</span>: Ingested DOC-8492 (PASSPORT_US). AI_Score: 42.1%. Route: MANUAL_REVIEW</div>
-                    <div class="log-entry"><span class="log-time">[13:59:02]</span> <span class="log-user">ANALYST_9482A</span>: Override applied to DOC-8471. Status: APPROVED.</div>
-                    <div class="log-entry"><span class="log-time">[13:58:44]</span> <span class="log-sys">SYS</span>: Ingested DOC-8491 (ID_CA). AI_Score: 98.7%. Route: AUTO_CLEARED</div>
-                    <div class="log-entry"><span class="log-time">[13:55:05]</span> <span class="log-sys">SYS</span>: Connection to Liveness API established (ms: 42).</div>
-                    <div class="log-entry"><span class="log-time">[13:55:01]</span> <span class="log-sys">SYS</span>: Ingested DOC-8490 (PASSPORT_UK). AI_Score: 12.4%. Route: REJECTED_FORGERY</div>
-                    <div class="log-entry"><span class="log-time">[13:42:10]</span> <span class="log-user">ANALYST_9482A</span>: Session started. Auth OK.</div>
-                    <div class="log-entry"><span class="log-time">[12:00:00]</span> <span class="log-sys">SYS</span>: Daily log rotation completed.</div>
+                    <!-- Logs injected by app.js -->
                 </div>
             </div>
 

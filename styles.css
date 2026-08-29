@@ -3,16 +3,16 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    border-radius: 0 !important; /* Constraint: no soft corners */
-    box-shadow: none !important; /* Constraint: no drop shadows */
-    transition: none !important; /* Constraint: no hover animations */
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transition: none !important;
 }
 
 body {
-    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif; /* Standard, not Inter/Geist */
-    background-color: #CBD5E1; /* Muted background, not pure white, not pastel */
-    color: #0F172A; /* Deep slate, not purple/black */
-    font-size: 13px; /* Professional, dense size */
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #CBD5E1;
+    color: #0F172A;
+    font-size: 13px;
     line-height: 1.5;
 }
 
@@ -30,7 +30,7 @@ h2 { font-size: 1.1rem; border-bottom: 1px solid #94A3B8; padding-bottom: 6px; }
 h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; }
 
 /* DATA FONT */
-.data-text, th, td, .log-terminal, .util-btn {
+.data-text, th, td, .log-terminal, .util-btn, .metric-value, .badge {
     font-family: Consolas, "Courier New", monospace;
 }
 
@@ -38,13 +38,13 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
 .app-container {
     display: flex;
     height: 100vh;
-    background-color: #F8FAFC; /* Off-white */
+    background-color: #F8FAFC;
 }
 
 /* SIDEBAR */
 .sidebar {
     width: 240px;
-    background-color: #1E293B; /* Professional deep slate */
+    background-color: #1E293B;
     color: #F8FAFC;
     display: flex;
     flex-direction: column;
@@ -58,7 +58,6 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
     padding: 16px 20px;
     background-color: #0F172A;
     color: #E2E8F0;
-    border-bottom: 1px solid #334155;
     letter-spacing: 1px;
 }
 
@@ -69,7 +68,9 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
 }
 
 .nav-links li a {
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 10px 20px;
     color: #94A3B8;
     text-decoration: none;
@@ -81,7 +82,15 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
     background-color: #334155;
     color: #F8FAFC;
     font-weight: 600;
-    border-left: 3px solid #3B82F6; /* Professional blue accent */
+    border-left: 3px solid #3B82F6;
+}
+
+.badge {
+    background-color: #EF4444;
+    color: #FFF;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: bold;
 }
 
 .sys-status {
@@ -89,7 +98,6 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
     font-size: 12px;
     background-color: #0F172A;
     color: #94A3B8;
-    border-top: 1px solid #334155;
     display: flex;
     align-items: center;
 }
@@ -98,7 +106,7 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
     display: inline-block;
     width: 8px;
     height: 8px;
-    background-color: #10B981; /* Clean green */
+    background-color: #10B981;
     margin-right: 8px;
 }
 
@@ -135,14 +143,53 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
     padding: 24px;
     flex-grow: 1;
     overflow-y: auto;
-    background-color: #E2E8F0; /* Soft industrial background */
+    background-color: #E2E8F0;
 }
+
+/* METRICS RIBBON */
+.metrics-ribbon {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.metric-box {
+    flex: 1;
+    background-color: #F8FAFC;
+    border: 1px solid #94A3B8;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748B;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.metric-value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #0F172A;
+}
+
+.metric-trend {
+    font-size: 10px;
+    margin-top: 8px;
+    font-weight: 600;
+}
+.metric-trend.up { color: #10B981; }
+.metric-trend.down { color: #EF4444; }
+.metric-trend.neutral { color: #94A3B8; }
+
 
 /* PANES & CARDS */
 .split-pane {
     display: flex;
     gap: 20px;
-    height: 100%;
 }
 
 .pane, .analysis-card {
@@ -155,7 +202,7 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
 
 .ingestion-pane {
     flex: 1;
-    max-width: 400px;
+    max-width: 350px;
 }
 
 .data-pane {
@@ -166,7 +213,7 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
 .upload-zone {
     border: 2px dashed #94A3B8;
     background-color: #F1F5F9;
-    flex-grow: 1;
+    height: 150px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -191,19 +238,32 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
     color: #64748B;
 }
 
+/* FILTERS */
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+.filter-group label {
+    font-size: 12px;
+    font-family: Consolas, "Courier New", monospace;
+    color: #475569;
+    cursor: pointer;
+}
+
 /* DATA TABLES */
 .data-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 12px;
-    margin-top: 12px;
     background-color: #F8FAFC;
     border: 1px solid #CBD5E1;
 }
 
 .data-table th, .data-table td {
     border-bottom: 1px solid #E2E8F0;
-    padding: 10px 12px;
+    padding: 8px 12px;
     text-align: left;
 }
 
@@ -226,7 +286,7 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
 }
 
 .data-table tr.flagged {
-    border-left: 3px solid #EF4444; /* Clean red */
+    border-left: 3px solid #EF4444;
     background-color: #FEF2F2;
 }
 .data-table tr.flagged:hover {
@@ -394,6 +454,7 @@ h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color
     font-size: 11px;
     font-weight: 600;
     border: 1px solid #94A3B8;
+    text-align: center;
 }
 
 .bio-connector {
