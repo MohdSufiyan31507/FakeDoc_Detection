@@ -180,7 +180,8 @@ def detect_moire_fft(cv_img):
     magnitude_spectrum[cy-30:cy+30, cx-30:cx+30] = 0
     high_freq_energy = np.mean(magnitude_spectrum)
     
-    is_recapture = high_freq_energy > 120 
+    # Increased threshold from 120 to 180 to reduce false positives on sharp digital scans
+    is_recapture = high_freq_energy > 180 
     return "SCREEN_RECAPTURE_DETECTED" if is_recapture else "NATURAL_SURFACE", is_recapture
 
 
