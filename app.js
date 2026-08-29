@@ -1,13 +1,48 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Nav Elements
+    const navLinks = document.querySelectorAll('.nav-link');
+    const views = document.querySelectorAll('.content-area');
+    const topBarTitle = document.getElementById('top-bar-title');
+
+    // Dashboard Elements
     const uploadZone = document.getElementById('upload-zone');
     const fileInput = document.getElementById('file-input');
     const tbody = document.querySelector('#recent-ingestions-table tbody');
+    const logTerminal = document.getElementById('log-terminal');
     
     // View Toggling Elements
     const mainSplitPane = document.getElementById('main-split-pane');
     const detailedAnalysis = document.getElementById('detailed-analysis');
     const closeAnalysisBtn = document.getElementById('close-analysis');
     const reportIdSpan = document.getElementById('report-id');
+
+    // Handle Navigation
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Remove active from all
+            navLinks.forEach(l => l.classList.remove('active'));
+            // Add active to clicked
+            link.classList.add('active');
+            
+            // Hide all views
+            views.forEach(view => view.classList.add('hidden'));
+            
+            // Show target view
+            const targetId = link.getAttribute('data-target');
+            document.getElementById(targetId).classList.remove('hidden');
+
+            // Update Header
+            topBarTitle.textContent = link.textContent.replace(/\[.*?\]/, '').trim();
+
+            // Special case: if returning to dashboard, ensure split pane is visible and analysis is hidden
+            if (targetId === 'dashboard-view') {
+                mainSplitPane.classList.remove('hidden');
+                detailedAnalysis.classList.add('hidden');
+            }
+        });
+    });
+
 
     // Trigger file selection on click
     uploadZone.addEventListener('click', () => {
@@ -31,7 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Mock a response
                 const isFlagged = Math.random() > 0.5;
                 const mockId = 'DOC-' + Math.floor(Math.random() * 10000);
-                const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+                
+                // Get current time like HH:MM:SS
+                const now = new Date();
+                const timeString = now.toTimeString().split(' ')[0];
+                const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
                 const confScore = (Math.random() * 100).toFixed(1) + '%';
                 
                 const status = isFlagged ? 'MANUAL_REVIEW' : 'CLEARED';
@@ -59,6 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Prepend to the table
                 tbody.prepend(tr);
 
+                // Add to Audit Log
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `<span class="log-time">[${timeString}]</span> <span class="log-sys">SYS</span>: Ingested ${mockId} (${fileName}). AI_Score: ${confScore}. Route: ${status}`;
+                logTerminal.prepend(logEntry);
+
                 // Reset Upload Zone
                 uploadZone.innerHTML = `
                     <p>SELECT OR DROP TARGET FILE</p>
@@ -72,8 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Attach click listeners to existing rows
-    const existingRows = document.querySelectorAll('.interactive-row');
+    // Attach click listeners to existing dashboard rows
+    const existingRows = document.querySelectorAll('#dashboard-view .interactive-row');
     existingRows.forEach(row => {
         row.addEventListener('click', () => {
             openDetailedAnalysis(row.dataset.id);
@@ -87,13 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function openDetailedAnalysis(docId) {
-        // Update the report ID in the header
         reportIdSpan.textContent = docId;
-        
-        // Hide the main dashboard split pane
         mainSplitPane.classList.add('hidden');
-        
-        // Show the detailed analysis view
         detailedAnalysis.classList.remove('hidden');
     }
 });

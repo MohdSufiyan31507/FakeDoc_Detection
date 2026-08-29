@@ -12,9 +12,9 @@
         <nav class="sidebar">
             <div class="brand">FAKEDOC_SYS // v1.0.4</div>
             <ul class="nav-links">
-                <li><a href="#" class="active" data-target="dashboard">Screening Dashboard</a></li>
-                <li><a href="#" data-target="queue">Review Queue [42]</a></li>
-                <li><a href="#" data-target="audit">Audit Log</a></li>
+                <li><a href="#" class="nav-link active" data-target="dashboard-view">Screening Dashboard</a></li>
+                <li><a href="#" class="nav-link" data-target="queue-view">Review Queue [42]</a></li>
+                <li><a href="#" class="nav-link" data-target="audit-view">Audit Log</a></li>
             </ul>
             <div class="sys-status">
                 <span class="status-indicator online"></span> AI_ENGINE: ONLINE
@@ -24,11 +24,12 @@
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
-                <h1>Screening Dashboard</h1>
+                <h1 id="top-bar-title">Screening Dashboard</h1>
                 <div class="user-info">Analyst ID: 9482A</div>
             </header>
 
-            <div class="content-area" id="dashboard">
+            <!-- 1. DASHBOARD VIEW -->
+            <div class="content-area" id="dashboard-view">
                 <!-- Split Pane Layout -->
                 <div class="split-pane" id="main-split-pane">
                     <!-- Left: Ingestion -->
@@ -89,7 +90,6 @@
                     </div>
                     
                     <div class="analysis-grid">
-                        <!-- Visual Evidence -->
                         <div class="analysis-card">
                             <h3>VISUAL EVIDENCE (ELA)</h3>
                             <div class="image-mockup">
@@ -100,7 +100,6 @@
                                         <div class="line w-60"></div>
                                         <div class="line w-90"></div>
                                     </div>
-                                    <!-- Heatmap overlay simulating clone stamp detection -->
                                     <div class="heatmap-overlay"></div>
                                 </div>
                             </div>
@@ -114,7 +113,6 @@
                             </div>
                         </div>
 
-                        <!-- Metadata Cross-Validation -->
                         <div class="analysis-card">
                             <h3>METADATA EXTRACTION</h3>
                             <table class="meta-table">
@@ -126,7 +124,6 @@
                             </table>
                         </div>
 
-                        <!-- Biometric Analysis -->
                         <div class="analysis-card">
                             <h3>BIOMETRIC MATCH</h3>
                             <div class="biometric-visual">
@@ -144,7 +141,6 @@
                             </div>
                         </div>
                         
-                        <!-- Decision Actions -->
                         <div class="analysis-card decision-panel">
                             <h3>ANALYST DECISION</h3>
                             <div class="btn-group">
@@ -156,6 +152,70 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 2. QUEUE VIEW -->
+            <div class="content-area hidden" id="queue-view">
+                <div class="view-header">
+                    <h2>MANUAL REVIEW QUEUE</h2>
+                    <div class="util-actions">
+                        <button class="util-btn">SELECT ALL</button>
+                        <button class="action-btn approve">APPROVE SELECTED</button>
+                        <button class="action-btn reject">REJECT SELECTED</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>[X]</th>
+                            <th>ID</th>
+                            <th>FLAG_REASON</th>
+                            <th>CONFIDENCE</th>
+                            <th>WAIT_TIME</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="interactive-row">
+                            <td><input type="checkbox"></td>
+                            <td>DOC-8492</td>
+                            <td>CLONE_STAMP_DETECTED</td>
+                            <td>42.1%</td>
+                            <td>14m 22s</td>
+                        </tr>
+                        <tr class="interactive-row">
+                            <td><input type="checkbox"></td>
+                            <td>DOC-8470</td>
+                            <td>FACE_MISMATCH</td>
+                            <td>19.8%</td>
+                            <td>45m 10s</td>
+                        </tr>
+                        <tr class="interactive-row">
+                            <td><input type="checkbox"></td>
+                            <td>DOC-8461</td>
+                            <td>EXPIRED_DOCUMENT</td>
+                            <td>99.1%</td>
+                            <td>1h 04m</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 3. AUDIT LOG VIEW -->
+            <div class="content-area hidden" id="audit-view">
+                <div class="view-header">
+                    <h2>IMMUTABLE AUDIT LOG</h2>
+                    <button class="util-btn">EXPORT CSV</button>
+                </div>
+                <div class="log-terminal" id="log-terminal">
+                    <div class="log-entry"><span class="log-time">[14:02:11]</span> <span class="log-sys">SYS</span>: Ingested DOC-8492 (PASSPORT_US). AI_Score: 42.1%. Route: MANUAL_REVIEW</div>
+                    <div class="log-entry"><span class="log-time">[13:59:02]</span> <span class="log-user">ANALYST_9482A</span>: Override applied to DOC-8471. Status: APPROVED.</div>
+                    <div class="log-entry"><span class="log-time">[13:58:44]</span> <span class="log-sys">SYS</span>: Ingested DOC-8491 (ID_CA). AI_Score: 98.7%. Route: AUTO_CLEARED</div>
+                    <div class="log-entry"><span class="log-time">[13:55:05]</span> <span class="log-sys">SYS</span>: Connection to Liveness API established (ms: 42).</div>
+                    <div class="log-entry"><span class="log-time">[13:55:01]</span> <span class="log-sys">SYS</span>: Ingested DOC-8490 (PASSPORT_UK). AI_Score: 12.4%. Route: REJECTED_FORGERY</div>
+                    <div class="log-entry"><span class="log-time">[13:42:10]</span> <span class="log-user">ANALYST_9482A</span>: Session started. Auth OK.</div>
+                    <div class="log-entry"><span class="log-time">[12:00:00]</span> <span class="log-sys">SYS</span>: Daily log rotation completed.</div>
+                </div>
+            </div>
+
         </main>
     </div>
     <script src="app.js"></script>
