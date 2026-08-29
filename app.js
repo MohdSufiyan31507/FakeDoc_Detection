@@ -106,25 +106,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- UPLOAD LOGIC ---
     let expectedType = null;
     const docCards = document.querySelectorAll('.doc-card');
+    const uploadView = document.getElementById('upload-view');
+    const backToDashFromUpload = document.getElementById('back-to-dash-from-upload');
+    const uploadTitle = document.getElementById('upload-title');
 
     docCards.forEach(card => {
         card.addEventListener('click', () => {
-            // Reset all borders
-            docCards.forEach(c => c.style.border = '1px solid #E2E8F0');
-            // Highlight clicked card
-            card.style.border = '2px solid #3B82F6';
-            
             expectedType = card.getAttribute('data-type');
             
-            // Auto-trigger file upload
-            fileInput.click();
+            dashboardView.classList.add('hidden');
+            detailedAnalysis.classList.add('hidden');
+            uploadView.classList.remove('hidden');
+            
+            uploadTitle.textContent = "Upload " + expectedType;
+            uploadZone.innerHTML = `
+                <p style="font-size: 1.25rem;">Click here to select your image</p>
+                <span class="upload-subtext">Supports JPG, PNG (High Resolution Recommended)</span>
+            `;
         });
     });
 
-    uploadZone.addEventListener('click', () => {
-        // Reset expected type if they click the generic box
+    backToDashFromUpload.addEventListener('click', () => {
+        uploadView.classList.add('hidden');
+        dashboardView.classList.remove('hidden');
         expectedType = null;
-        docCards.forEach(c => c.style.border = '1px solid #E2E8F0');
+    });
+
+    uploadZone.addEventListener('click', () => {
         fileInput.click();
     });
 
@@ -133,8 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const file = e.target.files[0];
             
             uploadZone.innerHTML = `
-                <p>Analyzing Document...</p>
-                <span class="upload-subtext">Please wait. Do not close the page.</span>
+                <p style="font-size: 1.25rem;">Analyzing Document...</p>
+                <span class="upload-subtext" style="color: #3B82F6;">Running AI Forensics. Do not close the page.</span>
             `;
 
             const formData = new FormData();
@@ -154,30 +162,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     analysisStore[data.doc_id] = data;
                     await refreshData();
 
-                    uploadZone.innerHTML = `
-                        <p>Analysis Complete!</p>
-                        <span class="upload-subtext" style="color:#10B981;">Click a card above to upload another document</span>
-                    `;
+                    // Go back to dashboard and open the analysis automatically
+                    uploadView.classList.add('hidden');
+                    openDetailedAnalysis(data.doc_id, true);
+                    expectedType = null;
                 } else {
                     uploadZone.innerHTML = `
-                        <p style="color:#DC2626;">Analysis Failed</p>
+                        <p style="color:#DC2626; font-size: 1.25rem;">Analysis Failed</p>
                         <span class="upload-subtext">${data.message || 'Check Server'}</span>
                     `;
                 }
             } catch (err) {
                 console.error(err);
                 uploadZone.innerHTML = `
-                    <p style="color:#DC2626;">Connection Error</p>
+                    <p style="color:#DC2626; font-size: 1.25rem;">Connection Error</p>
                     <span class="upload-subtext">Is the Python backend running?</span>
                 `;
             }
             fileInput.value = '';
-            
-            // Reset cards after upload finishes
-            setTimeout(() => {
-                docCards.forEach(c => c.style.border = '1px solid #E2E8F0');
-                expectedType = null;
-            }, 2000);
         }
     });
 

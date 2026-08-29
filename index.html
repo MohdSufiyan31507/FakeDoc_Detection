@@ -32,65 +32,82 @@
             <!-- DASHBOARD VIEW -->
             <div id="dashboard-view" class="content-area">
                 
-                <div class="dashboard-stack">
+                <h2 style="margin-bottom: 24px; font-size: 1.5rem;">Select Document Type to Scan</h2>
+                
+                <!-- LARGE SUPPORTED DOCUMENTS CARDS -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
                     
-                    <!-- SUPPORTED DOCUMENTS CARDS -->
-                    <div style="margin-bottom: 24px;">
-                        <h3 style="margin-bottom: 12px; font-size: 13px; color: #64748B;">SUPPORTED DOCUMENTS</h3>
-                        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                            
-                            <div class="doc-card" data-type="AADHAAR CARD" style="background: white; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex: 1; min-width: 180px; cursor: pointer; transition: all 0.2s;">
-                                <div style="width: 32px; height: 32px; border-radius: 8px; background: #EEF2FF; color: #4F46E5; display: flex; align-items: center; justify-content: center; font-weight: bold;">Aa</div>
-                                <div style="font-weight: 600; color: #0F172A;">Aadhaar Card</div>
-                            </div>
-                            
-                            <div class="doc-card" data-type="PAN CARD" style="background: white; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex: 1; min-width: 180px; cursor: pointer; transition: all 0.2s;">
-                                <div style="width: 32px; height: 32px; border-radius: 8px; background: #F0FDF4; color: #16A34A; display: flex; align-items: center; justify-content: center; font-weight: bold;">PA</div>
-                                <div style="font-weight: 600; color: #0F172A;">PAN Card</div>
-                            </div>
-                            
-                            <div class="doc-card" data-type="VOTER ID" style="background: white; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex: 1; min-width: 180px; cursor: pointer; transition: all 0.2s;">
-                                <div style="width: 32px; height: 32px; border-radius: 8px; background: #FEF2F2; color: #DC2626; display: flex; align-items: center; justify-content: center; font-weight: bold;">Vo</div>
-                                <div style="font-weight: 600; color: #0F172A;">Voter ID</div>
-                            </div>
-                            
-                            <div class="doc-card" data-type="PASSPORT" style="background: white; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex: 1; min-width: 180px; cursor: pointer; transition: all 0.2s;">
-                                <div style="width: 32px; height: 32px; border-radius: 8px; background: #FFFBEB; color: #D97706; display: flex; align-items: center; justify-content: center; font-weight: bold;">Ps</div>
-                                <div style="font-weight: 600; color: #0F172A;">Passport</div>
-                            </div>
-
+                    <div class="doc-card" data-type="AADHAAR CARD" style="background: white; border: 1px solid #E2E8F0; border-radius: 16px; padding: 24px; display: flex; align-items: flex-start; gap: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer; transition: all 0.2s;">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: #EEF2FF; color: #4F46E5; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">Aa</div>
+                        <div>
+                            <h3 style="margin-bottom: 4px; color: #0F172A;">Aadhaar Card</h3>
+                            <p style="color: #64748B; font-size: 13px;">Scans the 12-digit UID format and cross-verifies Government of India layout.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="doc-card" data-type="PAN CARD" style="background: white; border: 1px solid #E2E8F0; border-radius: 16px; padding: 24px; display: flex; align-items: flex-start; gap: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer; transition: all 0.2s;">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: #F0FDF4; color: #16A34A; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">PA</div>
+                        <div>
+                            <h3 style="margin-bottom: 4px; color: #0F172A;">PAN Card</h3>
+                            <p style="color: #64748B; font-size: 13px;">Validates Income Tax alphanumeric format and structural layout.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="doc-card" data-type="VOTER ID" style="background: white; border: 1px solid #E2E8F0; border-radius: 16px; padding: 24px; display: flex; align-items: flex-start; gap: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer; transition: all 0.2s;">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: #FEF2F2; color: #DC2626; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">Vo</div>
+                        <div>
+                            <h3 style="margin-bottom: 4px; color: #0F172A;">Voter ID (EPIC)</h3>
+                            <p style="color: #64748B; font-size: 13px;">Checks Election Commission formatting and 10-character EPIC numbers.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="doc-card" data-type="PASSPORT" style="background: white; border: 1px solid #E2E8F0; border-radius: 16px; padding: 24px; display: flex; align-items: flex-start; gap: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer; transition: all 0.2s;">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: #FFFBEB; color: #D97706; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">Ps</div>
+                        <div>
+                            <h3 style="margin-bottom: 4px; color: #0F172A;">Passport</h3>
+                            <p style="color: #64748B; font-size: 13px;">Performs advanced ICAO 9303 MRZ Checksum mathematics to detect forged digits.</p>
                         </div>
                     </div>
 
-                    <!-- CLEAN UPLOAD BOX -->
-                    <div class="upload-zone" id="upload-zone" style="margin-bottom: 32px;">
-                        <p>Click here to Upload an ID or Passport</p>
-                        <span class="upload-subtext">Supports JPG, PNG</span>
-                        <input type="file" id="file-input" class="hidden" accept="image/*">
-                    </div>
+                </div>
 
-                    <!-- CLEAN TABLE -->
-                    <div class="pane">
-                        <h2>Recent Scans</h2>
-                        <div class="table-container">
-                            <table class="data-table" id="recent-ingestions-table">
-                                <thead>
-                                    <tr>
-                                        <th>Doc ID</th>
-                                        <th>Time</th>
-                                        <th>Source</th>
-                                        <th>Risk Score</th>
-                                        <th>Result</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Injected via JS -->
-                                </tbody>
-                            </table>
-                        </div>
+                <!-- CLEAN TABLE -->
+                <div class="pane">
+                    <h2>Recent Scans</h2>
+                    <div class="table-container">
+                        <table class="data-table" id="recent-ingestions-table">
+                            <thead>
+                                <tr>
+                                    <th>Doc ID</th>
+                                    <th>Time</th>
+                                    <th>Source</th>
+                                    <th>Risk Score</th>
+                                    <th>Result</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Injected via JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
+            </div>
+
+            <!-- DEDICATED UPLOAD VIEW -->
+            <div id="upload-view" class="content-area hidden">
+                <button id="back-to-dash-from-upload" class="util-btn" style="margin-bottom: 24px; border-radius: 8px; padding: 8px 16px; background: white; border: 1px solid #E2E8F0; cursor: pointer;">← Back to Documents</button>
+                
+                <div class="pane" style="max-width: 600px; margin: 0 auto; text-align: center;">
+                    <h2 id="upload-title" style="margin-bottom: 8px;">Upload Document</h2>
+                    <p style="color: #64748B; margin-bottom: 32px;">The AI will actively check if the uploaded image matches this document type.</p>
+                    
+                    <div class="upload-zone" id="upload-zone" style="height: 250px;">
+                        <p style="font-size: 1.25rem;">Click here to select your image</p>
+                        <span class="upload-subtext">Supports JPG, PNG (High Resolution Recommended)</span>
+                        <input type="file" id="file-input" class="hidden" accept="image/*">
+                    </div>
+                </div>
             </div>
 
             <!-- DETAILED ANALYSIS VIEW (Clean Report Card) -->
