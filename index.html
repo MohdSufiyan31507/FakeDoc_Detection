@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FakeDoc Analyst Terminal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="brand">FAKEDOC_SYS // v1.0.4</div>
+            <ul class="nav-links">
+                <li><a href="#" class="active" data-target="dashboard">Screening Dashboard</a></li>
+                <li><a href="#" data-target="queue">Review Queue [42]</a></li>
+                <li><a href="#" data-target="audit">Audit Log</a></li>
+            </ul>
+            <div class="sys-status">
+                <span class="status-indicator online"></span> AI_ENGINE: ONLINE
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1>Screening Dashboard</h1>
+                <div class="user-info">Analyst ID: 9482A</div>
+            </header>
+
+            <div class="content-area" id="dashboard">
+                <!-- Split Pane Layout -->
+                <div class="split-pane">
+                    <!-- Left: Ingestion -->
+                    <div class="pane ingestion-pane">
+                        <h2>Document Ingestion</h2>
+                        <div class="upload-zone" id="upload-zone">
+                            <p>SELECT OR DROP TARGET FILE</p>
+                            <span class="upload-subtext">SUPPORTED: JPG, PNG, PDF | MAX 10MB</span>
+                            <input type="file" id="file-input" hidden>
+                        </div>
+                    </div>
+
+                    <!-- Right: Active Stream / Data -->
+                    <div class="pane data-pane">
+                        <h2>Recent Ingestions</h2>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>TIMESTAMP</th>
+                                    <th>DOC_TYPE</th>
+                                    <th>CONFIDENCE</th>
+                                    <th>STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="flagged">
+                                    <td>DOC-8492</td>
+                                    <td>2026-08-29 14:02:11</td>
+                                    <td>PASSPORT_US</td>
+                                    <td>42.1%</td>
+                                    <td>MANUAL_REVIEW</td>
+                                </tr>
+                                <tr>
+                                    <td>DOC-8491</td>
+                                    <td>2026-08-29 13:58:44</td>
+                                    <td>ID_CA</td>
+                                    <td>98.7%</td>
+                                    <td>CLEARED</td>
+                                </tr>
+                                <tr class="flagged">
+                                    <td>DOC-8490</td>
+                                    <td>2026-08-29 13:55:01</td>
+                                    <td>PASSPORT_UK</td>
+                                    <td>12.4%</td>
+                                    <td>REJECTED_FORGERY</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
