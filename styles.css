@@ -9,8 +9,9 @@
 
 body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #F3F4F6;
-    color: #1F2937;
+    /* Soft, cool blue-tinted background instead of flat gray */
+    background-color: #F1F5F9; 
+    color: #1E293B;
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -19,16 +20,16 @@ body {
 /* TYPOGRAPHY */
 h1, h2, h3 {
     font-weight: 600;
-    color: #111827;
+    color: #0F172A;
     letter-spacing: -0.025em;
 }
 
 h1 { font-size: 1.5rem; }
 h2 { font-size: 1.25rem; margin-bottom: 16px; }
-h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6B7280; margin-bottom: 16px; font-weight: 700; }
+h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; margin-bottom: 16px; font-weight: 700; }
 
 .data-text, .log-terminal, .util-btn, .metric-value {
-    font-family: 'Inter', system-ui, sans-serif; /* Moving away from monospace for a cleaner look */
+    font-family: 'Inter', system-ui, sans-serif;
 }
 .monospace {
     font-family: 'JetBrains Mono', Consolas, monospace;
@@ -38,18 +39,17 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 .app-container {
     display: flex;
     height: 100vh;
-    background-color: #F3F4F6;
+    background-color: #F1F5F9;
 }
 
-/* SIDEBAR - Modern Glass/White */
+/* SIDEBAR - Deep Indigo/Slate (COLOR INJECTION) */
 .sidebar {
     width: 260px;
-    background-color: #FFFFFF;
-    color: #4B5563;
+    background-color: #0F172A; /* Deep Slate */
+    color: #94A3B8;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #E5E7EB;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.02);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.1);
     z-index: 10;
 }
 
@@ -57,7 +57,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
     font-size: 1.25rem;
     font-weight: 700;
     padding: 24px;
-    color: #111827;
+    color: #F8FAFC;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -67,9 +67,9 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
     display: inline-block;
     width: 24px;
     height: 24px;
-    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%); /* Indigo to Blue */
     border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
 }
 
 .nav-links {
@@ -87,7 +87,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
     justify-content: space-between;
     align-items: center;
     padding: 10px 16px;
-    color: #4B5563;
+    color: #94A3B8;
     text-decoration: none;
     font-weight: 500;
     border-radius: 8px;
@@ -95,17 +95,19 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 }
 
 .nav-links li a:hover {
-    background-color: #F3F4F6;
-    color: #111827;
+    background-color: #1E293B; /* Slightly lighter slate */
+    color: #F8FAFC;
     transform: translateX(4px);
 }
 
 .nav-links li a.active {
-    background-color: #EFF6FF;
-    color: #2563EB;
+    background-color: #3B82F6; /* Bright Blue */
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 .nav-links li a.active .badge {
-    background-color: #2563EB;
+    background-color: #FFFFFF;
+    color: #3B82F6;
 }
 
 .badge {
@@ -122,10 +124,10 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
     padding: 20px 24px;
     font-size: 13px;
     font-weight: 500;
-    color: #6B7280;
+    color: #94A3B8;
     display: flex;
     align-items: center;
-    border-top: 1px solid #E5E7EB;
+    background-color: #0B1120; /* Even darker footer */
 }
 
 .status-indicator {
@@ -159,16 +161,16 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
     align-items: center;
     padding: 0 32px;
     height: 64px;
-    background-color: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid #E5E7EB;
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid #E2E8F0;
     z-index: 5;
 }
 
 .user-info {
     font-size: 14px;
-    color: #4B5563;
-    font-weight: 500;
+    color: #334155;
+    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -176,7 +178,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 .user-avatar {
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); /* Purple/Indigo gradient */
     border-radius: 50%;
     color: white;
     display: flex;
@@ -184,7 +186,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
     justify-content: center;
     font-weight: bold;
     font-size: 12px;
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
 }
 
 .content-area {
@@ -193,7 +195,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
     overflow-y: auto;
 }
 
-/* METRICS RIBBON */
+/* METRICS RIBBON - Add subtle color accents */
 .metrics-ribbon {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -203,7 +205,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 
 .metric-box {
     background-color: #FFFFFF;
-    border: 1px solid #E5E7EB;
+    border: 1px solid #E2E8F0;
     border-radius: 16px;
     padding: 24px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
@@ -214,6 +216,16 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
     overflow: hidden;
 }
 
+/* Colored accent line at the top of each metric box */
+.metric-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 4px;
+}
+.metric-box:nth-child(1)::before { background-color: #3B82F6; } /* Blue */
+.metric-box:nth-child(2)::before { background-color: #8B5CF6; } /* Purple */
+.metric-box:nth-child(3)::before { background-color: #EF4444; } /* Red */
+
 .metric-box:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -222,7 +234,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 .metric-label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #6B7280;
+    color: #64748B;
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -231,21 +243,21 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 .metric-value {
     font-size: 2rem;
     font-weight: 700;
-    color: #111827;
+    color: #0F172A;
     letter-spacing: -0.025em;
 }
 
 .metric-trend {
     font-size: 0.875rem;
     margin-top: 8px;
-    font-weight: 500;
+    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 4px;
 }
 .metric-trend.up { color: #10B981; }
 .metric-trend.down { color: #EF4444; }
-.metric-trend.neutral { color: #6B7280; }
+.metric-trend.neutral { color: #64748B; }
 
 /* PANES & CARDS */
 .split-pane {
@@ -255,7 +267,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 
 .pane, .analysis-card {
     background-color: #FFFFFF;
-    border: 1px solid #E5E7EB;
+    border: 1px solid #E2E8F0;
     border-radius: 16px;
     padding: 24px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
@@ -288,14 +300,14 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 
 .upload-zone:hover {
     border-color: #3B82F6;
-    background-color: #EFF6FF;
+    background-color: #EFF6FF; /* Very light blue */
     transform: scale(1.02);
 }
 
 .upload-zone p {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #1E293B;
+    color: #0F172A;
     margin-bottom: 8px;
 }
 
@@ -308,7 +320,8 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 .table-container {
     overflow-x: auto;
     border-radius: 12px;
-    border: 1px solid #E5E7EB;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .data-table {
@@ -321,12 +334,12 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 .data-table th, .data-table td {
     padding: 14px 16px;
     text-align: left;
-    border-bottom: 1px solid #E5E7EB;
+    border-bottom: 1px solid #E2E8F0;
 }
 
 .data-table th {
-    background-color: #F9FAFB;
-    color: #6B7280;
+    background-color: #F8FAFC;
+    color: #475569;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.75rem;
@@ -339,9 +352,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 }
 
 .interactive-row:hover {
-    background-color: #F9FAFB;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    background-color: #F1F5F9;
 }
 
 .interactive-row td:last-child {
@@ -357,13 +368,13 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 
 /* AUDIT LOG */
 .log-terminal {
-    background-color: #111827;
-    color: #E5E7EB;
+    background-color: #0F172A;
+    color: #E2E8F0;
     border-radius: 12px;
     padding: 20px;
     height: calc(100vh - 160px);
     overflow-y: auto;
-    border: 1px solid #374151;
+    border: 1px solid #1E293B;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     font-family: 'JetBrains Mono', Consolas, monospace;
 }
@@ -373,25 +384,18 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
     line-height: 1.5;
     font-size: 13px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #1F2937;
+    border-bottom: 1px solid #1E293B;
 }
 
-.log-time { color: #6B7280; }
+.log-time { color: #64748B; }
 .log-sys { color: #F59E0B; font-weight: bold; }
 .log-user { color: #38BDF8; font-weight: bold; }
 
-/* DETAILED ANALYSIS VIEW */
-.analysis-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-}
-
 /* VISUAL EVIDENCE MOCKUP */
 .image-mockup {
-    background-color: #F3F4F6;
+    background-color: #F8FAFC;
     border-radius: 12px;
-    border: 1px solid #E5E7EB;
+    border: 1px solid #E2E8F0;
     height: 220px;
     margin: 16px 0;
     display: flex;
@@ -409,34 +413,37 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
     justify-content: space-around;
     margin: 16px 0;
     padding: 24px;
-    background: linear-gradient(to right, #F8FAFC, #F1F5F9);
+    /* Beautiful subtle indigo/blue gradient for the biometric area */
+    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
     border-radius: 12px;
-    border: 1px solid #E5E7EB;
+    border: 1px solid #C7D2FE;
 }
 
 .bio-box {
     width: 90px;
     height: 90px;
     background-color: #FFFFFF;
-    color: #475569;
+    color: #3730A3;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1);
     text-align: center;
     overflow: hidden;
+    border: 2px solid #FFFFFF;
 }
 
 .bio-connector {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #3B82F6;
-    background: #DBEAFE;
-    padding: 4px 12px;
+    color: #4F46E5;
+    background: #FFFFFF;
+    padding: 6px 16px;
     border-radius: 9999px;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.1);
 }
 
 /* BUTTONS */
@@ -465,7 +472,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 
 .action-btn.reject {
     background-color: #FEE2E2;
-    color: #DC2626;
+    color: #B91C1C;
     box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
 }
 .action-btn.reject:hover { 
@@ -476,7 +483,7 @@ h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; col
 
 .action-btn.approve {
     background-color: #D1FAE5;
-    color: #059669;
+    color: #047857;
     box-shadow: 0 2px 4px rgba(5, 150, 105, 0.1);
 }
 .action-btn.approve:hover { 
