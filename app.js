@@ -10,19 +10,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.querySelector('#recent-ingestions-table tbody');
     const logTerminal = document.getElementById('log-terminal');
     
-    // View Toggling Elements
-    const mainSplitPane = document.getElementById('main-split-pane');
+    // View Elements
+    const dashboardView = document.getElementById('dashboard-view');
     const detailedAnalysis = document.getElementById('detailed-analysis');
     const closeAnalysisBtn = document.getElementById('close-analysis');
+    
+    // Report Elements
     const reportIdSpan = document.getElementById('report-id');
+    const finalDecisionBadge = document.getElementById('final-decision-badge');
     const forensicImageContainer = document.getElementById('forensic-image-container');
-    const ocrTable = document.getElementById('ocr-table');
     const extractedFaceBox = document.getElementById('extracted-face-box');
-
-    // Telemetry Elements
-    const sysLoadSpan = document.getElementById('sys-load');
-    const tickCounterSpan = document.getElementById('tick-counter');
-    let tickCount = 0;
+    const securityChecklistTable = document.getElementById('security-checklist-table');
+    const extractedTextTable = document.getElementById('extracted-text-table');
 
     const analysisStore = {};
 
@@ -37,16 +36,22 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const targetId = link.getAttribute('data-target');
             document.getElementById(targetId).classList.remove('hidden');
-
-            topBarTitle.textContent = link.textContent.replace(/\[.*?\]/, '').trim();
-            if (targetId === 'dashboard-view') {
-                mainSplitPane.classList.remove('hidden');
-                detailedAnalysis.classList.add('hidden');
-            }
+            topBarTitle.textContent = link.textContent.trim();
         });
     });
 
-    // --- MILESTONE 10: REAL DATABASE FETCHING ---
+    // --- HELPER: Translate Tech Jargon to Plain English ---
+    function formatDecision(decisionStr) {
+        if (decisionStr === 'REJECTED' || decisionStr === 'QUARANTINE_L1') {
+            return { text: "FAKE / REJECTED", color: "#DC2626", bg: "#FEE2E2" };
+        } else if (decisionStr === 'APPROVED' || decisionStr === 'SYS_CLEARED') {
+            return { text: "REAL / APPROVED", color: "#059669", bg: "#D1FAE5" };
+        } else {
+            return { text: "REVIEW NEEDED", color: "#D97706", bg: "#FEF3C7" };
+        }
+    }
+
+    // --- REAL DATABASE FETCHING ---
     async function refreshData() {
         try {
             // Fetch Stream
@@ -58,19 +63,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tr = document.createElement('tr');
                     tr.classList.add('interactive-row');
                     tr.dataset.id = doc.doc_id;
+                    
+                    const decision = formatDecision(doc.decision);
                     if (doc.is_flagged) tr.classList.add('flagged');
                     
+                    let srcName = doc.source_type === 'REAL_UPLOAD' ? 'Manual Upload' : 'Background Scan';
                     let srcColor = doc.source_type === 'REAL_UPLOAD' ? 'color:#3B82F6; font-weight:bold;' : '';
                     
                     tr.innerHTML = `
                         <td>${doc.doc_id}</td>
                         <td>${doc.timestamp}</td>
-                        <td style="${srcColor}">${doc.source_type}</td>
+                        <td style="${srcColor}">${srcName}</td>
                         <td>${doc.confidence}</td>
-                        <td>${doc.decision}</td>
+                        <td style="color: ${decision.color}; font-weight: bold;">${decision.text}</td>
                     `;
-                    // If it's real upload, it relies on analysisStore.
-                    // (For a full app, we'd store the image in DB, but for prototype we just use local store for current session real uploads)
                     tr.addEventListener('click', () => openDetailedAnalysis(doc.doc_id, doc.source_type === 'REAL_UPLOAD'));
                     tbody.appendChild(tr);
                 });
@@ -84,8 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 auditData.logs.forEach(log => {
                     const logEntry = document.createElement('div');
                     logEntry.className = 'log-entry';
-                    const actorClass = log.actor === 'PYTHON_BACKEND' ? 'log-user' : 'log-sys';
-                    logEntry.innerHTML = `<span class="log-time">[${log.time_str}]</span> <span class="${actorClass}">${log.actor}</span>: ${log.action}`;
+                    logEntry.innerHTML = `<span class="log-time">[${log.time_str}]</span> <strong>${log.actor}</strong>: ${log.action}`;
                     logTerminal.appendChild(logEntry);
                 });
             }
@@ -98,16 +103,15 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshData();
 
 
-    // --- REAL BACKEND UPLOAD LOGIC ---
+    // --- UPLOAD LOGIC ---
     uploadZone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', async (e) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
             
             uploadZone.innerHTML = `
-                <p>UPLOADING TO BACKEND</p>
-                <span class="upload-subtext">${file.name.toUpperCase()}</span>
-                <span style="display:block; margin-top:16px; font-weight:bold; color:#0284C7;">[ AI PROCESSING ]</span>
+                <p>Analyzing Document...</p>
+                <span class="upload-subtext">Please wait. Do not close the page.</span>
             `;
 
             const formData = new FormData();
@@ -122,58 +126,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (data.status === 'success') {
                     analysisStore[data.doc_id] = data;
-                    
-                    // Refresh data from the DB to show the new record
                     await refreshData();
 
                     uploadZone.innerHTML = `
-                        <p>INITIALIZE UPLOAD</p>
-                        <span class="upload-subtext">CLICK OR DROP FILE HERE</span>
-                        <span style="display:block; margin-top:16px; font-weight:bold; color:#10B981;">[ ANALYSIS COMPLETE ]</span>
+                        <p>Analysis Complete!</p>
+                        <span class="upload-subtext" style="color:#10B981;">Click here to upload another document</span>
                     `;
                 } else {
                     uploadZone.innerHTML = `
-                        <p>SYSTEM ERROR</p>
-                        <span class="upload-subtext">BACKEND FAILED</span>
-                        <span style="display:block; margin-top:16px; font-weight:bold; color:#EF4444;">[ ${data.message || 'Check Server'} ]</span>
+                        <p style="color:#DC2626;">Analysis Failed</p>
+                        <span class="upload-subtext">${data.message || 'Check Server'}</span>
                     `;
                 }
             } catch (err) {
                 console.error(err);
                 uploadZone.innerHTML = `
-                    <p>CONNECTION REFUSED</p>
-                    <span class="upload-subtext">IS THE PYTHON BACKEND RUNNING?</span>
-                    <span style="display:block; margin-top:16px; font-weight:bold; color:#EF4444;">[ RUN: uvicorn main:app --reload ]</span>
+                    <p style="color:#DC2626;">Connection Error</p>
+                    <span class="upload-subtext">Is the Python backend running?</span>
                 `;
             }
             fileInput.value = '';
         }
     });
 
-    // --- LIVE TELEMETRY SIMULATION ---
-    setInterval(() => {
-        const baseLoad = 40;
-        const variance = (Math.random() * 15) - 5; 
-        sysLoadSpan.textContent = (baseLoad + variance).toFixed(1) + '%';
-        tickCount++;
-        tickCounterSpan.textContent = tickCount;
-    }, 1000);
-
-    // Call backend to simulate an API Gateway ingestion
+    // --- BACKGROUND SIMULATION ---
     setInterval(async () => {
-        if (!document.getElementById('dashboard-view').classList.contains('hidden') && 
-            detailedAnalysis.classList.contains('hidden')) {
+        if (!dashboardView.classList.contains('hidden') && detailedAnalysis.classList.contains('hidden')) {
             try {
                 await fetch('http://localhost:8000/api/simulate_gateway', { method: 'POST' });
-                refreshData(); // Refresh DB view
-            } catch(err) { /* backend offline */ }
+                refreshData(); 
+            } catch(err) {}
         }
-    }, 8000); 
+    }, 12000); 
 
     // --- DETAILED ANALYSIS LOGIC ---
     closeAnalysisBtn.addEventListener('click', () => {
         detailedAnalysis.classList.add('hidden');
-        mainSplitPane.classList.remove('hidden');
+        dashboardView.classList.remove('hidden');
     });
 
     function openDetailedAnalysis(docId, isReal = false) {
@@ -181,80 +170,75 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isReal && analysisStore[docId]) {
             const data = analysisStore[docId];
-            forensicImageContainer.innerHTML = `
-                <img src="${data.ela_heatmap}" style="max-width:100%; max-height:100%; object-fit:contain; border: 1px solid #94A3B8;">
-            `;
             
-            let tableHTML = '';
+            // 1. TOP BADGE
+            const decision = formatDecision(data.decision);
+            finalDecisionBadge.textContent = decision.text;
+            finalDecisionBadge.style.backgroundColor = decision.bg;
+            finalDecisionBadge.style.color = decision.color;
+            finalDecisionBadge.style.border = `1px solid ${decision.color}`;
+
+            // 2. VISUALS
+            forensicImageContainer.innerHTML = `<img src="${data.ela_heatmap}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">`;
+            
+            if (data.extracted_face) {
+                extractedFaceBox.innerHTML = `<img src="${data.extracted_face}" style="max-width:100%; max-height:100%; object-fit:cover; border-radius:8px;">`;
+                extractedFaceBox.style.border = "none";
+            } else {
+                extractedFaceBox.innerHTML = `No Face Found`;
+            }
+
+            // 3. SECURITY CHECKLIST (Translated)
             const mrzStatus = data.metadata_checks?.mrz || 'NOT_FOUND';
             const mrzDetails = data.metadata_checks?.mrz_details || '';
-            let statusColor = mrzStatus === 'PASS' ? 'status-ok' : (mrzStatus === 'FAIL' ? 'alert-text' : 'status-ok');
-            
-            tableHTML += `<tr>
-                <td style="color:#3B82F6;">SYS_MRZ_CHECKSUM</td>
-                <td style="font-weight:bold; color:#0F172A;">${mrzDetails}</td>
-                <td class="${statusColor}">${mrzStatus}</td>
-            </tr>`;
-            
+            let mrzDisplay = mrzStatus === 'PASS' ? '<span style="color:#059669;">Passed</span>' : '<span style="color:#DC2626;">Failed (Numbers tampered)</span>';
+            if(mrzStatus === 'NOT_FOUND') mrzDisplay = '<span style="color:#64748B;">No passport numbers found</span>';
+
             const exifDetails = data.metadata_checks?.exif || 'NOT_FOUND';
-            let exifColor = exifDetails.includes('SOFTWARE_SIG_DETECTED') ? 'alert-text' : (exifDetails.includes('CLEAN') ? 'status-ok' : 'alert-text');
-            tableHTML += `<tr>
-                <td style="color:#8B5CF6;">EXIF_METADATA</td>
-                <td style="font-weight:bold; color:#0F172A;">${exifDetails}</td>
-                <td class="${exifColor}">${exifDetails.includes('CLEAN') ? 'PASS' : 'FLAGGED'}</td>
-            </tr>`;
-            
+            let exifDisplay = exifDetails.includes('SOFTWARE_SIG_DETECTED') ? '<span style="color:#DC2626;">Failed (Photoshopped)</span>' : '<span style="color:#059669;">Passed (Original File)</span>';
+            if(exifDetails.includes('NO_EXIF')) exifDisplay = '<span style="color:#D97706;">Warning (Metadata wiped)</span>';
+
             const moireDetails = data.metadata_checks?.moire || 'NOT_FOUND';
-            let moireColor = moireDetails.includes('SCREEN_RECAPTURE') ? 'alert-text' : 'status-ok';
-            tableHTML += `<tr>
-                <td style="color:#10B981;">FFT_MOIRE_DETECTION</td>
-                <td style="font-weight:bold; color:#0F172A;">${moireDetails}</td>
-                <td class="${moireColor}">${moireDetails.includes('NATURAL') ? 'PASS' : 'FLAGGED'}</td>
-            </tr>`;
-            
+            let moireDisplay = moireDetails.includes('SCREEN_RECAPTURE') ? '<span style="color:#DC2626;">Failed (Photo of a screen)</span>' : '<span style="color:#059669;">Passed (Natural photo)</span>';
+
+            securityChecklistTable.innerHTML = `
+                <tr>
+                    <td style="font-weight:600; width:40%;">Passport Math Check</td>
+                    <td>${mrzDisplay}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight:600;">Software/Photoshop Check</td>
+                    <td>${exifDisplay}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight:600;">Screen Photo Check</td>
+                    <td>${moireDisplay}</td>
+                </tr>
+            `;
+
+            // 4. EXTRACTED TEXT
             if (data.extracted_text && data.extracted_text.length > 0) {
-                tableHTML += data.extracted_text.map((text, idx) => `
-                    <tr><td>STRING_${idx.toString().padStart(3, '0')}</td><td style="color:#64748B;">${text}</td><td class="status-ok">EXTRACTED</td></tr>
+                extractedTextTable.innerHTML = data.extracted_text.map(text => `
+                    <tr><td>${text}</td></tr>
                 `).join('');
             } else {
-                tableHTML += `<tr><td colspan="3" class="alert-text">NO TEXT DETECTED IN DOCUMENT</td></tr>`;
-            }
-            ocrTable.innerHTML = tableHTML;
-
-            if (data.extracted_face) {
-                extractedFaceBox.innerHTML = `<img src="${data.extracted_face}" style="max-width:100%; max-height:100%; object-fit:cover;">`;
-                extractedFaceBox.style.padding = '0';
-            } else {
-                extractedFaceBox.innerHTML = `NO FACE<br>DETECTED`;
-                extractedFaceBox.style.padding = ''; 
-                extractedFaceBox.style.color = '#EF4444'; 
+                extractedTextTable.innerHTML = `<tr><td style="color:#64748B;">No text could be read from this document.</td></tr>`;
             }
 
         } else {
-            forensicImageContainer.innerHTML = `
-                <div class="id-card-base">
-                    <div class="id-photo"></div>
-                    <div class="id-text-lines">
-                        <div class="line w-80"></div>
-                        <div class="line w-60"></div>
-                        <div class="line w-90"></div>
-                    </div>
-                    <div class="heatmap-overlay"></div>
-                </div>
-            `;
+            // Placeholder for simulated docs
+            finalDecisionBadge.textContent = "SIMULATED DATA";
+            finalDecisionBadge.style.backgroundColor = "#F1F5F9";
+            finalDecisionBadge.style.color = "#64748B";
             
-            ocrTable.innerHTML = `
-                <tr><td>MRZ_CHECKSUM</td><td>PASS</td><td class="status-ok">VERIFIED</td></tr>
-                <tr><td>EXPIRATION_GATE</td><td>FAIL</td><td class="alert-text">EXPIRED</td></tr>
-                <tr><td colspan="3" style="color:#64748B;">[SIMULATED API_GATEWAY DATA]</td></tr>
-            `;
+            forensicImageContainer.innerHTML = `<p style="color:#64748B;">[ Heatmap only available for manual uploads ]</p>`;
+            extractedFaceBox.innerHTML = `No Image`;
             
-            extractedFaceBox.innerHTML = `EXTRACTED<br>FACE`;
-            extractedFaceBox.style.padding = '';
-            extractedFaceBox.style.color = '';
+            securityChecklistTable.innerHTML = `<tr><td>Simulated background data cannot be viewed in deep analysis.</td></tr>`;
+            extractedTextTable.innerHTML = ``;
         }
         
-        mainSplitPane.classList.add('hidden');
+        dashboardView.classList.add('hidden');
         detailedAnalysis.classList.remove('hidden');
     }
 });

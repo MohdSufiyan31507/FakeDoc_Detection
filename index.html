@@ -2,94 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FakeDoc Analyst Terminal</title>
+    <title>AI Document Screener</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        
+        <!-- SIMPLE SIDEBAR -->
         <nav class="sidebar">
-            <div class="brand">FAKEDOC_SYS // v1.0.4</div>
-            <div class="sys-status" style="border-bottom: 1px solid #334155; border-top: none;">
-                <span class="status-indicator online" id="global-status-led"></span> 
-                <span id="global-status-text">AI_ENGINE: ONLINE</span>
-            </div>
+            <div class="brand">DocScreener AI</div>
             <ul class="nav-links">
-                <li><a href="#" class="nav-link active" data-target="dashboard-view">Live Telemetry</a></li>
-                <li><a href="#" class="nav-link" data-target="queue-view">Review Queue <span class="badge" id="queue-count">42</span></a></li>
-                <li><a href="#" class="nav-link" data-target="audit-view">Audit Ledger</a></li>
+                <li><a href="#" class="nav-link active" data-target="dashboard-view">Scanner Dashboard</a></li>
+                <li><a href="#" class="nav-link" data-target="logs-view">System History</a></li>
             </ul>
+            <div class="sys-status">
+                <span class="status-indicator"></span> System Online
+            </div>
         </nav>
 
-        <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
-                <h1 id="top-bar-title">Live Telemetry</h1>
-                <div class="user-info">SESSION: ANALYST_9482A | NODE: US-EAST-1</div>
+                <h1 id="top-bar-title">Scanner Dashboard</h1>
+                <div class="user-info">
+                    <span>Admin</span>
+                    <div class="user-avatar">AD</div>
+                </div>
             </header>
 
-            <!-- 1. DASHBOARD VIEW -->
-            <div class="content-area" id="dashboard-view">
+            <!-- DASHBOARD VIEW -->
+            <div id="dashboard-view" class="content-area">
                 
-                <!-- NEW: METRICS RIBBON -->
-                <div class="metrics-ribbon">
-                    <div class="metric-box">
-                        <span class="metric-label">NODE_CPU_LOAD</span>
-                        <span class="metric-value" id="sys-load">42.1%</span>
-                        <span class="metric-trend up">▲ TICK: <span id="tick-counter">0</span></span>
-                    </div>
-                    <div class="metric-box">
-                        <span class="metric-label">24H_INGESTION_VOL</span>
-                        <span class="metric-value">1,492</span>
-                        <span class="metric-trend up">▲ +14% vs 24h</span>
-                    </div>
-                    <div class="metric-box">
-                        <span class="metric-label">CRITICAL_FLAGS</span>
-                        <span class="metric-value alert-text">108</span>
-                        <span class="metric-trend down">▼ -1.2% vs 24h</span>
-                    </div>
-                    <div class="metric-box">
-                        <span class="metric-label">SYS_ACCURACY_CONF</span>
-                        <span class="metric-value">98.4%</span>
-                        <span class="metric-trend neutral">▶ STABLE</span>
-                    </div>
-                </div>
-
-                <!-- Split Pane Layout -->
-                <div class="split-pane" id="main-split-pane">
-                    <!-- Left: Ingestion & Filters -->
-                    <div class="pane ingestion-pane">
-                        <h2>MANUAL INGESTION</h2>
-                        <div class="upload-zone" id="upload-zone">
-                            <p>INITIALIZE UPLOAD</p>
-                            <span class="upload-subtext">CLICK OR DROP FILE HERE</span>
-                            <input type="file" id="file-input" hidden>
-                        </div>
-                        
-                        <h2 style="margin-top: 24px;">STREAM FILTERS</h2>
-                        <div class="filter-group">
-                            <label><input type="checkbox" checked> SHOW_CLEARED</label>
-                            <label><input type="checkbox" checked> SHOW_FLAGGED</label>
-                            <label><input type="checkbox" checked> STREAM_AUTO_REFRESH</label>
-                        </div>
+                <div class="dashboard-stack">
+                    <!-- CLEAN UPLOAD BOX -->
+                    <div class="upload-zone" id="upload-zone" style="margin-bottom: 32px;">
+                        <p>Click here to Upload an ID or Passport</p>
+                        <span class="upload-subtext">Supports JPG, PNG</span>
+                        <input type="file" id="file-input" class="hidden" accept="image/*">
                     </div>
 
-                    <!-- Right: Active Stream / Data -->
-                    <div class="pane data-pane">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
-                            <h2 style="margin: 0; border: none;">LIVE INGESTION STREAM</h2>
-                            <span style="font-size: 11px; font-weight: bold; color: #10B981; font-family: Consolas;">● STREAM_ACTIVE</span>
-                        </div>
+                    <!-- CLEAN TABLE -->
+                    <div class="pane">
+                        <h2>Recent Scans</h2>
                         <div class="table-container">
                             <table class="data-table" id="recent-ingestions-table">
                                 <thead>
                                     <tr>
-                                        <th>REQUEST_ID</th>
-                                        <th>TIMESTAMP</th>
-                                        <th>SOURCE_TYPE</th>
-                                        <th>AI_CONFIDENCE</th>
-                                        <th>SYS_ROUTING</th>
+                                        <th>Doc ID</th>
+                                        <th>Time</th>
+                                        <th>Source</th>
+                                        <th>Risk Score</th>
+                                        <th>Result</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -100,130 +62,71 @@
                     </div>
                 </div>
 
-                <!-- Detailed Analysis View (Hidden by default) -->
-                <div class="detailed-analysis hidden" id="detailed-analysis">
-                    <div class="analysis-header">
-                        <div>
-                            <h2>DEEP ANALYSIS: <span id="report-id">DOC-XXXX</span></h2>
-                            <span style="font-family: Consolas; font-size: 12px; color: #64748B;">LOCKED FOR REVIEW BY: ANALYST_9482A</span>
-                        </div>
-                        <button id="close-analysis" class="util-btn">DISENGAGE [X]</button>
-                    </div>
-                    
-                    <div class="analysis-grid">
-                        <div class="analysis-card">
-                            <h3>FORENSIC IMAGING (ELA)</h3>
-                            <div class="image-mockup" id="forensic-image-container">
-                                <div class="id-card-base">
-                                    <div class="id-photo"></div>
-                                    <div class="id-text-lines">
-                                        <div class="line w-80"></div>
-                                        <div class="line w-60"></div>
-                                        <div class="line w-90"></div>
-                                    </div>
-                                    <div class="heatmap-overlay"></div>
-                                </div>
-                            </div>
-                            <div class="metric-row">
-                                <span>Error Level Variance:</span>
-                                <span class="alert-text">DELTA_HIGH (92%)</span>
-                            </div>
-                            <div class="metric-row">
-                                <span>Pixel Consistency:</span>
-                                <span class="alert-text">FAIL_SIG_29</span>
-                            </div>
-                        </div>
+            </div>
 
-                        <div class="analysis-card">
-                            <h3>EXTRACTED METADATA (OCR)</h3>
-                            <table class="meta-table" id="ocr-table">
-                                <tr><td style="color:#64748B;">AWAITING OCR STREAM...</td></tr>
+            <!-- DETAILED ANALYSIS VIEW (Clean Report Card) -->
+            <div id="detailed-analysis" class="content-area hidden">
+                
+                <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <button id="close-analysis" class="util-btn" style="margin-bottom: 12px; border-radius: 8px;">← Back to Dashboard</button>
+                        <h2>Scan Report: <span id="report-id" class="monospace text-blue-600"></span></h2>
+                    </div>
+                    <div id="final-decision-badge" style="padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 1.2rem;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <div class="analysis-stack" style="display: flex; flex-direction: column; gap: 24px;">
+                    
+                    <!-- VISUAL EVIDENCE SECTION -->
+                    <div class="pane" style="display: flex; gap: 24px;">
+                        <div style="flex: 2;">
+                            <h3>Tamper Detection Heatmap</h3>
+                            <p style="font-size: 12px; color: #64748B; margin-bottom: 12px;">Highlights areas that were likely photoshopped or altered (Red = High Risk).</p>
+                            <div class="image-mockup" id="forensic-image-container" style="height: 300px; margin: 0;">
+                                <!-- Image injected here -->
+                            </div>
+                        </div>
+                        <div style="flex: 1;">
+                            <h3>Extracted Face Photo</h3>
+                            <p style="font-size: 12px; color: #64748B; margin-bottom: 12px;">The face isolated from the document.</p>
+                            <div class="bio-box" id="extracted-face-box" style="width: 100%; height: 300px; margin: 0; font-size: 1rem;">
+                                <!-- Face injected here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECURITY CHECKLIST SECTION -->
+                    <div class="pane">
+                        <h3>Security Checks</h3>
+                        <div class="table-container">
+                            <table class="data-table" id="security-checklist-table">
+                                <!-- Checks injected here -->
                             </table>
                         </div>
+                    </div>
 
-                        <div class="analysis-card">
-                            <h3>BIOMETRIC TOPOLOGY</h3>
-                            <div class="biometric-visual">
-                                <div class="bio-box" id="extracted-face-box">EXTRACTED<br>FACE</div>
-                                <div class="bio-connector">◄ DELTA 42% ►</div>
-                                <div class="bio-box">LIVENESS<br>CAPTURE</div>
-                            </div>
-                            <div class="metric-row">
-                                <span>Liveness Mesh:</span>
-                                <span class="status-ok">PASS (98%)</span>
-                            </div>
-                            <div class="metric-row">
-                                <span>Nodal Match:</span>
-                                <span class="alert-text">FAIL (42%)</span>
-                            </div>
-                        </div>
-                        
-                        <div class="analysis-card decision-panel">
-                            <h3>ANALYST OVERRIDE GATE</h3>
-                            <div class="btn-group">
-                                <button class="action-btn reject">BLOCK: FRAUD</button>
-                                <button class="action-btn reject">BLOCK: DOC_ERROR</button>
-                                <button class="action-btn approve">FORCE APPROVE</button>
-                            </div>
+                    <!-- EXTRACTED TEXT SECTION -->
+                    <div class="pane">
+                        <h3>Text Found on Document</h3>
+                        <div class="table-container">
+                            <table class="data-table" id="extracted-text-table">
+                                <!-- Text injected here -->
+                            </table>
                         </div>
                     </div>
+
                 </div>
             </div>
 
-            <!-- 2. QUEUE VIEW -->
-            <div class="content-area hidden" id="queue-view">
-                <div class="view-header">
-                    <h2>PENDING MANUAL REVIEW</h2>
-                    <div class="util-actions">
-                        <button class="util-btn">SELECT_ALL</button>
-                        <button class="action-btn approve">BATCH_APPROVE</button>
-                        <button class="action-btn reject">BATCH_REJECT</button>
+            <!-- LOGS VIEW -->
+            <div id="logs-view" class="content-area hidden">
+                <div class="pane">
+                    <h2>System History</h2>
+                    <div class="log-terminal" id="log-terminal">
+                        <div class="log-entry" style="color: #64748B;">Loading history...</div>
                     </div>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>[ ]</th>
-                            <th>DOC_ID</th>
-                            <th>FLAG_CODE</th>
-                            <th>CONFIDENCE</th>
-                            <th>QUEUE_TIME</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="interactive-row">
-                            <td><input type="checkbox"></td>
-                            <td>DOC-8492</td>
-                            <td>ERR_CLONE_STAMP</td>
-                            <td>42.1%</td>
-                            <td>14m 22s</td>
-                        </tr>
-                        <tr class="interactive-row">
-                            <td><input type="checkbox"></td>
-                            <td>DOC-8470</td>
-                            <td>ERR_FACE_MISMATCH</td>
-                            <td>19.8%</td>
-                            <td>45m 10s</td>
-                        </tr>
-                        <tr class="interactive-row">
-                            <td><input type="checkbox"></td>
-                            <td>DOC-8461</td>
-                            <td>ERR_EXPIRED</td>
-                            <td>99.1%</td>
-                            <td>1h 04m</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- 3. AUDIT LOG VIEW -->
-            <div class="content-area hidden" id="audit-view">
-                <div class="view-header">
-                    <h2>SYSTEM AUDIT LEDGER</h2>
-                    <button class="util-btn">EXPORT_CSV</button>
-                </div>
-                <div class="log-terminal" id="log-terminal">
-                    <!-- Logs injected by app.js -->
                 </div>
             </div>
 
