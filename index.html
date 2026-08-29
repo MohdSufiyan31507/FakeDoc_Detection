@@ -30,7 +30,7 @@
 
             <div class="content-area" id="dashboard">
                 <!-- Split Pane Layout -->
-                <div class="split-pane">
+                <div class="split-pane" id="main-split-pane">
                     <!-- Left: Ingestion -->
                     <div class="pane ingestion-pane">
                         <h2>Document Ingestion</h2>
@@ -43,8 +43,8 @@
 
                     <!-- Right: Active Stream / Data -->
                     <div class="pane data-pane">
-                        <h2>Recent Ingestions</h2>
-                        <table class="data-table">
+                        <h2>Recent Ingestions (Click to Analyze)</h2>
+                        <table class="data-table" id="recent-ingestions-table">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -55,21 +55,21 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="flagged">
+                                <tr class="flagged interactive-row" data-id="DOC-8492">
                                     <td>DOC-8492</td>
                                     <td>2026-08-29 14:02:11</td>
                                     <td>PASSPORT_US</td>
                                     <td>42.1%</td>
                                     <td>MANUAL_REVIEW</td>
                                 </tr>
-                                <tr>
+                                <tr class="interactive-row" data-id="DOC-8491">
                                     <td>DOC-8491</td>
                                     <td>2026-08-29 13:58:44</td>
                                     <td>ID_CA</td>
                                     <td>98.7%</td>
                                     <td>CLEARED</td>
                                 </tr>
-                                <tr class="flagged">
+                                <tr class="flagged interactive-row" data-id="DOC-8490">
                                     <td>DOC-8490</td>
                                     <td>2026-08-29 13:55:01</td>
                                     <td>PASSPORT_UK</td>
@@ -78,6 +78,81 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Detailed Analysis View (Hidden by default) -->
+                <div class="detailed-analysis hidden" id="detailed-analysis">
+                    <div class="analysis-header">
+                        <h2>ANALYSIS REPORT: <span id="report-id">DOC-XXXX</span></h2>
+                        <button id="close-analysis" class="util-btn">[X] CLOSE REPORT</button>
+                    </div>
+                    
+                    <div class="analysis-grid">
+                        <!-- Visual Evidence -->
+                        <div class="analysis-card">
+                            <h3>VISUAL EVIDENCE (ELA)</h3>
+                            <div class="image-mockup">
+                                <div class="id-card-base">
+                                    <div class="id-photo"></div>
+                                    <div class="id-text-lines">
+                                        <div class="line w-80"></div>
+                                        <div class="line w-60"></div>
+                                        <div class="line w-90"></div>
+                                    </div>
+                                    <!-- Heatmap overlay simulating clone stamp detection -->
+                                    <div class="heatmap-overlay"></div>
+                                </div>
+                            </div>
+                            <div class="metric-row">
+                                <span>Clone Stamping:</span>
+                                <span class="alert-text">DETECTED (92%)</span>
+                            </div>
+                            <div class="metric-row">
+                                <span>Compression Variance:</span>
+                                <span class="alert-text">HIGH (POSSIBLE EDIT)</span>
+                            </div>
+                        </div>
+
+                        <!-- Metadata Cross-Validation -->
+                        <div class="analysis-card">
+                            <h3>METADATA EXTRACTION</h3>
+                            <table class="meta-table">
+                                <tr><td>LAST_NAME</td><td>DOE</td><td class="status-ok">OK</td></tr>
+                                <tr><td>FIRST_NAME</td><td>JOHN</td><td class="status-ok">OK</td></tr>
+                                <tr><td>DOB</td><td>1985-04-12</td><td class="status-ok">OK</td></tr>
+                                <tr><td>EXP_DATE</td><td>2021-09-01</td><td class="alert-text">EXPIRED</td></tr>
+                                <tr><td>ID_NUMBER</td><td>A9482910</td><td class="alert-text">CHECKSUM_FAIL</td></tr>
+                            </table>
+                        </div>
+
+                        <!-- Biometric Analysis -->
+                        <div class="analysis-card">
+                            <h3>BIOMETRIC MATCH</h3>
+                            <div class="biometric-visual">
+                                <div class="bio-box">ID PHOTO</div>
+                                <div class="bio-connector">◄ MISMATCH (42%) ►</div>
+                                <div class="bio-box">SELFIE</div>
+                            </div>
+                            <div class="metric-row">
+                                <span>Liveness Score:</span>
+                                <span class="status-ok">PASS (98%)</span>
+                            </div>
+                            <div class="metric-row">
+                                <span>Face Match:</span>
+                                <span class="alert-text">FAIL (42%)</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Decision Actions -->
+                        <div class="analysis-card decision-panel">
+                            <h3>ANALYST DECISION</h3>
+                            <div class="btn-group">
+                                <button class="action-btn reject">REJECT: FORGERY</button>
+                                <button class="action-btn reject">REJECT: EXPIRED</button>
+                                <button class="action-btn approve">OVERRIDE & APPROVE</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -200,6 +200,14 @@ h2 { font-size: 1.1rem; }
     color: #F4F5F6;
 }
 
+.interactive-row {
+    cursor: pointer;
+}
+
+.interactive-row:hover {
+    background-color: #D5DBDB !important; /* Utilitarian highlight */
+}
+
 .data-table tr.flagged {
     background-color: #FADBD8; /* Pale red for flagged rows */
     border-left: 4px solid #E74C3C;
@@ -207,4 +215,213 @@ h2 { font-size: 1.1rem; }
 
 .data-table tr:nth-child(even):not(.flagged) {
     background-color: #E8ECEF;
+}
+
+/* UTILITY CLASSES */
+.hidden {
+    display: none !important;
+}
+
+.util-btn {
+    font-family: Consolas, "Courier New", monospace;
+    font-weight: bold;
+    background: #1A1A1A;
+    color: #F4F5F6;
+    border: 2px solid #1A1A1A;
+    padding: 4px 12px;
+    cursor: pointer;
+}
+
+.util-btn:active {
+    background: #4D5656;
+}
+
+/* DETAILED ANALYSIS VIEW */
+.detailed-analysis {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    flex-grow: 1;
+}
+
+.analysis-card {
+    border: 2px solid #1A1A1A;
+    padding: 16px;
+    background-color: #F2F4F4;
+    display: flex;
+    flex-direction: column;
+}
+
+/* VISUAL EVIDENCE MOCKUP */
+.image-mockup {
+    background-color: #D5DBDB;
+    border: 2px solid #1A1A1A;
+    height: 150px;
+    margin-bottom: 16px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.id-card-base {
+    width: 200px;
+    height: 120px;
+    background-color: #E8ECEF;
+    border: 2px solid #1A1A1A;
+    position: relative;
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+}
+
+.id-photo {
+    width: 60px;
+    height: 80px;
+    background-color: #4D5656;
+    border: 1px solid #1A1A1A;
+}
+
+.id-text-lines {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 8px;
+}
+
+.line {
+    height: 8px;
+    background-color: #1A1A1A;
+}
+
+.w-80 { width: 80%; }
+.w-60 { width: 60%; }
+.w-90 { width: 90%; }
+
+.heatmap-overlay {
+    position: absolute;
+    top: 50px;
+    left: 80px;
+    width: 40px;
+    height: 20px;
+    background-color: rgba(231, 76, 60, 0.6); /* Red heatmap patch */
+    border: 2px solid #E74C3C;
+    mix-blend-mode: multiply;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.9rem;
+    padding: 4px 0;
+    border-bottom: 1px dotted #1A1A1A;
+}
+
+.alert-text {
+    color: #E74C3C;
+    font-weight: bold;
+}
+
+.status-ok {
+    color: #2ECC71;
+    font-weight: bold;
+}
+
+/* META TABLE */
+.meta-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.9rem;
+}
+
+.meta-table td {
+    padding: 6px;
+    border-bottom: 1px solid #1A1A1A;
+}
+
+.meta-table td:first-child {
+    font-weight: bold;
+    width: 40%;
+}
+
+/* BIOMETRIC VISUAL */
+.biometric-visual {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 16px;
+    border: 2px dashed #1A1A1A;
+}
+
+.bio-box {
+    width: 80px;
+    height: 80px;
+    background-color: #4D5656;
+    color: #F4F5F6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.8rem;
+    text-align: center;
+    border: 2px solid #1A1A1A;
+}
+
+.bio-connector {
+    font-family: Consolas, "Courier New", monospace;
+    font-weight: bold;
+    color: #E74C3C;
+}
+
+/* DECISION PANEL */
+.decision-panel {
+    grid-column: 1 / -1;
+    background-color: #E8ECEF;
+}
+
+.btn-group {
+    display: flex;
+    gap: 16px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px;
+    font-family: Consolas, "Courier New", monospace;
+    font-weight: bold;
+    font-size: 1rem;
+    border: 2px solid #1A1A1A;
+    cursor: pointer;
+}
+
+.action-btn.reject {
+    background-color: #E74C3C;
+    color: #F4F5F6;
+}
+
+.action-btn.approve {
+    background-color: #F2F4F4;
+    color: #1A1A1A;
+}
+
+.action-btn:active {
+    opacity: 0.8;
 }
