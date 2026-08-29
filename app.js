@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tickCounterSpan = document.getElementById('tick-counter');
     let tickCount = 0;
 
-    // A store for real analysis results so we can display them when clicked
     const analysisStore = {};
 
     // --- NAVIGATION LOGIC ---
@@ -47,38 +46,85 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // --- MILESTONE 10: REAL DATABASE FETCHING ---
+    async function refreshData() {
+        try {
+            // Fetch Stream
+            const streamRes = await fetch('http://localhost:8000/api/stream');
+            if(streamRes.ok) {
+                const streamData = await streamRes.json();
+                tbody.innerHTML = '';
+                streamData.documents.forEach(doc => {
+                    const tr = document.createElement('tr');
+                    tr.classList.add('interactive-row');
+                    tr.dataset.id = doc.doc_id;
+                    if (doc.is_flagged) tr.classList.add('flagged');
+                    
+                    let srcColor = doc.source_type === 'REAL_UPLOAD' ? 'color:#3B82F6; font-weight:bold;' : '';
+                    
+                    tr.innerHTML = `
+                        <td>${doc.doc_id}</td>
+                        <td>${doc.timestamp}</td>
+                        <td style="${srcColor}">${doc.source_type}</td>
+                        <td>${doc.confidence}</td>
+                        <td>${doc.decision}</td>
+                    `;
+                    // If it's real upload, it relies on analysisStore.
+                    // (For a full app, we'd store the image in DB, but for prototype we just use local store for current session real uploads)
+                    tr.addEventListener('click', () => openDetailedAnalysis(doc.doc_id, doc.source_type === 'REAL_UPLOAD'));
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // Fetch Audit
+            const auditRes = await fetch('http://localhost:8000/api/audit');
+            if(auditRes.ok) {
+                const auditData = await auditRes.json();
+                logTerminal.innerHTML = '';
+                auditData.logs.forEach(log => {
+                    const logEntry = document.createElement('div');
+                    logEntry.className = 'log-entry';
+                    const actorClass = log.actor === 'PYTHON_BACKEND' ? 'log-user' : 'log-sys';
+                    logEntry.innerHTML = `<span class="log-time">[${log.time_str}]</span> <span class="${actorClass}">${log.actor}</span>: ${log.action}`;
+                    logTerminal.appendChild(logEntry);
+                });
+            }
+        } catch (err) {
+            console.error("DB Fetch Error (Is backend running?):", err);
+        }
+    }
+
+    // Load data on startup
+    refreshData();
+
+
     // --- REAL BACKEND UPLOAD LOGIC ---
     uploadZone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', async (e) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
             
-            // UI Feedback for ingestion
             uploadZone.innerHTML = `
                 <p>UPLOADING TO BACKEND</p>
                 <span class="upload-subtext">${file.name.toUpperCase()}</span>
                 <span style="display:block; margin-top:16px; font-weight:bold; color:#0284C7;">[ AI PROCESSING ]</span>
             `;
 
-            // Prepare form data
             const formData = new FormData();
             formData.append('file', file);
 
             try {
-                // SEND TO REAL PYTHON BACKEND
                 const response = await fetch('http://localhost:8000/api/analyze', {
                     method: 'POST',
                     body: formData
                 });
-                
                 const data = await response.json();
 
                 if (data.status === 'success') {
-                    // Store the real data
                     analysisStore[data.doc_id] = data;
                     
-                    // Inject into table
-                    injectRealDocument(data);
+                    // Refresh data from the DB to show the new record
+                    await refreshData();
 
                     uploadZone.innerHTML = `
                         <p>INITIALIZE UPLOAD</p>
@@ -100,12 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span style="display:block; margin-top:16px; font-weight:bold; color:#EF4444;">[ RUN: uvicorn main:app --reload ]</span>
                 `;
             }
-            
             fileInput.value = '';
         }
     });
 
-    // --- LIVE TELEMETRY SIMULATION (Keep this running so it looks alive) ---
+    // --- LIVE TELEMETRY SIMULATION ---
     setInterval(() => {
         const baseLoad = 40;
         const variance = (Math.random() * 15) - 5; 
@@ -114,80 +159,16 @@ document.addEventListener('DOMContentLoaded', () => {
         tickCounterSpan.textContent = tickCount;
     }, 1000);
 
-    // Keep injecting fake stream data to look busy, but mark them as API_GATEWAY
-    setInterval(() => {
+    // Call backend to simulate an API Gateway ingestion
+    setInterval(async () => {
         if (!document.getElementById('dashboard-view').classList.contains('hidden') && 
             detailedAnalysis.classList.contains('hidden')) {
-            injectFakeStreamDocument();
+            try {
+                await fetch('http://localhost:8000/api/simulate_gateway', { method: 'POST' });
+                refreshData(); // Refresh DB view
+            } catch(err) { /* backend offline */ }
         }
-    }, Math.floor(Math.random() * 5000) + 8000); 
-
-    // --- INJECTION HELPERS ---
-    
-    function injectRealDocument(data) {
-        const now = new Date();
-        const timeString = now.toTimeString().split(' ')[0];
-        const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
-        
-        const tr = document.createElement('tr');
-        tr.classList.add('interactive-row');
-        tr.dataset.id = data.doc_id;
-        if (data.is_flagged) tr.classList.add('flagged');
-        
-        tr.innerHTML = `
-            <td>${data.doc_id}</td>
-            <td>${timestamp}</td>
-            <td style="color:#3B82F6; font-weight:bold;">REAL_UPLOAD</td>
-            <td>${data.confidence_score}</td>
-            <td>${data.decision}</td>
-        `;
-        
-        tr.addEventListener('click', () => openDetailedAnalysis(data.doc_id, true));
-        
-        if (tbody.children.length >= 10) tbody.removeChild(tbody.lastChild);
-        tbody.prepend(tr);
-
-        // Update Audit Log
-        const logEntry = document.createElement('div');
-        logEntry.className = 'log-entry';
-        logEntry.innerHTML = `<span class="log-time">[${timeString}]</span> <span class="log-sys">PYTHON_BACKEND</span>: Analyzed ${data.filename} -> ${data.doc_id}. ELA_CONF: ${data.confidence_score}. ROUTE: ${data.decision}`;
-        logTerminal.prepend(logEntry);
-    }
-
-    function injectFakeStreamDocument() {
-        const isFlagged = Math.random() > 0.8; 
-        const mockId = 'DOC-' + Math.floor(Math.random() * 100000);
-        
-        const now = new Date();
-        const timeString = now.toTimeString().split(' ')[0];
-        const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
-        const confScore = (Math.random() * 100).toFixed(1) + '%';
-        
-        const status = isFlagged ? 'QUARANTINE_L1' : 'SYS_CLEARED';
-        
-        const tr = document.createElement('tr');
-        tr.classList.add('interactive-row');
-        tr.dataset.id = mockId;
-        if (isFlagged) tr.classList.add('flagged');
-        
-        tr.innerHTML = `
-            <td>${mockId}</td>
-            <td>${timestamp}</td>
-            <td>API_GATEWAY</td>
-            <td>${confScore}</td>
-            <td>${status}</td>
-        `;
-        
-        tr.addEventListener('click', () => openDetailedAnalysis(mockId, false));
-        
-        if (tbody.children.length >= 10) tbody.removeChild(tbody.lastChild);
-        tbody.prepend(tr);
-
-        const logEntry = document.createElement('div');
-        logEntry.className = 'log-entry';
-        logEntry.innerHTML = `<span class="log-time">[${timeString}]</span> <span class="log-sys">SYS_GATE</span>: Event ${mockId}. CONF: ${confScore}. ROUTE: ${status}`;
-        logTerminal.prepend(logEntry);
-    }
+    }, 8000); 
 
     // --- DETAILED ANALYSIS LOGIC ---
     closeAnalysisBtn.addEventListener('click', () => {
@@ -199,16 +180,12 @@ document.addEventListener('DOMContentLoaded', () => {
         reportIdSpan.textContent = docId;
         
         if (isReal && analysisStore[docId]) {
-            // Render the REAL ELA heatmap from the Python backend!
             const data = analysisStore[docId];
             forensicImageContainer.innerHTML = `
                 <img src="${data.ela_heatmap}" style="max-width:100%; max-height:100%; object-fit:contain; border: 1px solid #94A3B8;">
             `;
             
-            // Render the REAL OCR data and MRZ Status
             let tableHTML = '';
-            
-            // Add MRZ Verification Row
             const mrzStatus = data.metadata_checks?.mrz || 'NOT_FOUND';
             const mrzDetails = data.metadata_checks?.mrz_details || '';
             let statusColor = mrzStatus === 'PASS' ? 'status-ok' : (mrzStatus === 'FAIL' ? 'alert-text' : 'status-ok');
@@ -226,21 +203,18 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 tableHTML += `<tr><td colspan="3" class="alert-text">NO TEXT DETECTED IN DOCUMENT</td></tr>`;
             }
-            
             ocrTable.innerHTML = tableHTML;
 
-            // Render REAL Extracted Face
             if (data.extracted_face) {
                 extractedFaceBox.innerHTML = `<img src="${data.extracted_face}" style="max-width:100%; max-height:100%; object-fit:cover;">`;
-                extractedFaceBox.style.padding = '0'; // remove padding so image fills box
+                extractedFaceBox.style.padding = '0';
             } else {
                 extractedFaceBox.innerHTML = `NO FACE<br>DETECTED`;
                 extractedFaceBox.style.padding = ''; 
-                extractedFaceBox.style.color = '#EF4444'; // Red alert text
+                extractedFaceBox.style.color = '#EF4444'; 
             }
 
         } else {
-            // Render the fake placeholder
             forensicImageContainer.innerHTML = `
                 <div class="id-card-base">
                     <div class="id-photo"></div>
@@ -266,10 +240,5 @@ document.addEventListener('DOMContentLoaded', () => {
         
         mainSplitPane.classList.add('hidden');
         detailedAnalysis.classList.remove('hidden');
-    }
-
-    // Populate initial rows
-    for(let i=0; i<3; i++) {
-        injectFakeStreamDocument();
     }
 });

@@ -9,6 +9,9 @@ import time
 import random
 import easyocr
 import re
+import sqlite3
+from contextlib import contextmanager
+from datetime import datetime
 
 app = FastAPI()
 
@@ -22,6 +25,44 @@ app.add_middleware(
 print("Initializing AI OCR Engine... (Downloads language models on first run)")
 ocr_reader = easyocr.Reader(['en'], gpu=False)
 
+# --- MILESTONE 10: DATABASE SETUP ---
+def init_db():
+    conn = sqlite3.connect("fakedoc.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS documents (
+            doc_id TEXT PRIMARY KEY,
+            timestamp TEXT,
+            source_type TEXT,
+            confidence TEXT,
+            decision TEXT,
+            is_flagged BOOLEAN
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            time_str TEXT,
+            timestamp TEXT,
+            actor TEXT,
+            action TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
+@contextmanager
+def get_db():
+    conn = sqlite3.connect("fakedoc.db")
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+# --- AI CORE ---
 def perform_ela(image_bytes, quality=90):
     original = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     temp_io = io.BytesIO()
@@ -48,7 +89,6 @@ def perform_ela(image_bytes, quality=90):
     
     variance = np.var(gray)
     confidence = max(0, min(100, 100 - (variance / 15)))
-    
     return b64_str, confidence, variance
 
 def perform_ocr(image_bytes):
@@ -60,14 +100,9 @@ def perform_ocr(image_bytes):
     for (bbox, text, prob) in results:
         if prob > 0.2:
             extracted_text.append(text)
-            
     return extracted_text
 
 def extract_face(image_bytes):
-    """
-    Uses OpenCV Haar Cascades to detect and crop the largest face in the document.
-    Returns Base64 string of the cropped face, or None if no face is found.
-    """
     try:
         nparr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -79,11 +114,9 @@ def extract_face(image_bytes):
         if len(faces) == 0:
             return None
             
-        # Get largest face (usually the main ID photo)
         largest_face = max(faces, key=lambda rect: rect[2] * rect[3])
         x, y, w, h = largest_face
         
-        # Add slight padding around face
         pad = int(w * 0.1)
         y1, y2 = max(0, y-pad), min(img.shape[0], y+h+pad)
         x1, x2 = max(0, x-pad), min(img.shape[1], x+w+pad)
@@ -95,7 +128,6 @@ def extract_face(image_bytes):
         print(f"Face extraction error: {e}")
         return None
 
-# --- MILESTONE 8: MRZ MATH VALIDATION ---
 def get_mrz_character_value(char):
     if '0' <= char <= '9':
         return int(char)
@@ -106,7 +138,6 @@ def get_mrz_character_value(char):
     return 0
 
 def calculate_mrz_checksum(data_str):
-    """ ICAO 9303 Standard MRZ Checksum Algorithm (Weights: 7, 3, 1) """
     weights = [7, 3, 1]
     total = 0
     for i, char in enumerate(data_str):
@@ -115,30 +146,17 @@ def calculate_mrz_checksum(data_str):
     return total % 10
 
 def validate_mrz_logic(ocr_text_list):
-    """
-    Scans the extracted OCR text for Machine Readable Zones (MRZ).
-    If found, applies the ICAO 9303 mathematical algorithm to verify 
-    document numbers and birth dates. If the math fails, the ID is forged.
-    """
     for text in ocr_text_list:
         clean_text = text.replace(" ", "").upper()
-        
-        # Look for strings that have characteristics of an MRZ line (long, alphanumeric + <)
         if len(clean_text) >= 15 and ('<' in clean_text or sum(1 for c in clean_text if c.isdigit()) > 6):
-            
-            # Find any block of 6 to 9 characters followed immediately by a single digit
-            # This pattern matches Passport Numbers, DOBs (YYMMDD), and Expirations.
             matches = re.finditer(r'([A-Z0-9<]{6,9})(\d)', clean_text)
-            
             found_valid = False
             failed_math = False
             
             for match in matches:
                 data = match.group(1)
                 check_digit = int(match.group(2))
-                
                 calculated = calculate_mrz_checksum(data)
-                
                 if calculated == check_digit:
                     found_valid = True
                 else:
@@ -151,6 +169,7 @@ def validate_mrz_logic(ocr_text_list):
             
     return "NOT_FOUND", "NO_MRZ_DETECTED"
 
+# --- API ENDPOINTS ---
 @app.post("/api/analyze")
 async def analyze_document(file: UploadFile = File(...)):
     contents = await file.read()
@@ -160,20 +179,37 @@ async def analyze_document(file: UploadFile = File(...)):
         extracted_text_list = perform_ocr(contents)
         extracted_face_b64 = extract_face(contents)
         
-        # Run Milestone 8 MRZ Logic
         mrz_status, mrz_details = validate_mrz_logic(extracted_text_list)
         
-        # Determine Decision
         is_flagged = confidence < 80.0 or mrz_status == "FAIL"
         status = "QUARANTINE_L1" if is_flagged else "SYS_CLEARED"
         
+        doc_id = "DOC-REAL-" + str(random.randint(1000, 9999))
+        now = datetime.now()
+        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+        time_str = now.strftime("%H:%M:%S")
+        conf_str = f"{confidence:.1f}%"
+        
+        # Save to Database
+        with get_db() as db:
+            db.execute(
+                "INSERT INTO documents (doc_id, timestamp, source_type, confidence, decision, is_flagged) VALUES (?, ?, ?, ?, ?, ?)",
+                (doc_id, timestamp, "REAL_UPLOAD", conf_str, status, is_flagged)
+            )
+            action_text = f"Analyzed {file.filename} -> {doc_id}. ELA_CONF: {conf_str}. ROUTE: {status}"
+            db.execute(
+                "INSERT INTO audit_log (time_str, timestamp, actor, action) VALUES (?, ?, ?, ?)",
+                (time_str, timestamp, "PYTHON_BACKEND", action_text)
+            )
+            db.commit()
+        
         return {
             "status": "success",
-            "doc_id": "DOC-REAL-" + str(random.randint(1000, 9999)),
+            "doc_id": doc_id,
             "filename": file.filename,
             "ela_heatmap": "data:image/jpeg;base64," + ela_b64,
             "extracted_face": extracted_face_b64,
-            "confidence_score": f"{confidence:.1f}%",
+            "confidence_score": conf_str,
             "decision": status,
             "is_flagged": is_flagged,
             "extracted_text": extracted_text_list,
@@ -185,3 +221,42 @@ async def analyze_document(file: UploadFile = File(...)):
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@app.post("/api/simulate_gateway")
+def simulate_gateway():
+    """Simulates a background document entering the system, saves to DB."""
+    is_flagged = random.random() > 0.8
+    doc_id = 'DOC-' + str(random.randint(10000, 99999))
+    now = datetime.now()
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    time_str = now.strftime("%H:%M:%S")
+    conf_score = f"{(random.random() * 100):.1f}%"
+    status = "QUARANTINE_L1" if is_flagged else "SYS_CLEARED"
+    
+    with get_db() as db:
+        db.execute(
+            "INSERT INTO documents (doc_id, timestamp, source_type, confidence, decision, is_flagged) VALUES (?, ?, ?, ?, ?, ?)",
+            (doc_id, timestamp, "API_GATEWAY", conf_score, status, is_flagged)
+        )
+        action_text = f"Event {doc_id}. CONF: {conf_score}. ROUTE: {status}"
+        db.execute(
+            "INSERT INTO audit_log (time_str, timestamp, actor, action) VALUES (?, ?, ?, ?)",
+            (time_str, timestamp, "SYS_GATE", action_text)
+        )
+        db.commit()
+        
+    return {"status": "success", "doc_id": doc_id}
+
+@app.get("/api/stream")
+def get_stream():
+    """Fetches the 15 most recent documents from DB"""
+    with get_db() as db:
+        docs = db.execute("SELECT * FROM documents ORDER BY timestamp DESC LIMIT 15").fetchall()
+        return {"documents": [dict(d) for d in docs]}
+
+@app.get("/api/audit")
+def get_audit():
+    """Fetches the 50 most recent audit logs from DB"""
+    with get_db() as db:
+        logs = db.execute("SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 50").fetchall()
+        return {"logs": [dict(l) for l in logs]}
