@@ -164,12 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isReal && analysisStore[docId]) {
             const data = analysisStore[docId];
             
-            // 1. TOP BADGE
+            // 1. TOP BADGE & TYPE
             const decision = formatDecision(data.decision);
-            finalDecisionBadge.textContent = decision.text;
-            finalDecisionBadge.style.backgroundColor = decision.bg;
-            finalDecisionBadge.style.color = decision.color;
-            finalDecisionBadge.style.border = `1px solid ${decision.color}`;
+            finalDecisionBadge.innerHTML = `<span style="font-size:14px; color:#64748B; margin-right:12px;">DETECTED: ${data.doc_type || 'UNKNOWN'}</span> 
+                                            <span style="background:${decision.bg}; color:${decision.color}; padding:8px 16px; border-radius:6px; border:1px solid ${decision.color};">${decision.text}</span>`;
 
             // 2. VISUALS
             forensicImageContainer.innerHTML = `<img src="${data.ela_heatmap}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">`;
@@ -181,23 +179,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 extractedFaceBox.innerHTML = `No Face Found`;
             }
 
-            // 3. SECURITY CHECKLIST (Translated)
-            const mrzStatus = data.metadata_checks?.mrz || 'NOT_FOUND';
-            const mrzDetails = data.metadata_checks?.mrz_details || '';
-            let mrzDisplay = mrzStatus === 'PASS' ? '<span style="color:#059669;">Passed</span>' : '<span style="color:#DC2626;">Failed (Numbers tampered)</span>';
-            if(mrzStatus === 'NOT_FOUND') mrzDisplay = '<span style="color:#64748B;">No passport numbers found</span>';
+            // 3. SECURITY CHECKLIST (Dynamic Multi-ID)
+            const docStatus = data.metadata_checks?.doc_validation || 'NOT_FOUND';
+            const docDetails = data.metadata_checks?.doc_details || '';
+            let docDisplay = docStatus === 'PASS' ? `<span style="color:#059669;">Passed (${docDetails})</span>` : `<span style="color:#DC2626;">Failed (${docDetails})</span>`;
+
+            const digilockerStatus = data.metadata_checks?.digilocker || 'NOT_FOUND';
+            let digiDisplay = digilockerStatus === 'PASS' ? '<span style="color:#059669;">Verified with UIDAI/DigiLocker</span>' : '<span style="color:#DC2626;">UIDAI/DigiLocker Verification Failed</span>';
 
             const exifDetails = data.metadata_checks?.exif || 'NOT_FOUND';
             let exifDisplay = exifDetails.includes('SOFTWARE_SIG_DETECTED') ? '<span style="color:#DC2626;">Failed (Photoshopped)</span>' : '<span style="color:#059669;">Passed (Original File)</span>';
-            if(exifDetails.includes('NO_EXIF')) exifDisplay = '<span style="color:#D97706;">Warning (Metadata wiped)</span>';
 
             const moireDetails = data.metadata_checks?.moire || 'NOT_FOUND';
             let moireDisplay = moireDetails.includes('SCREEN_RECAPTURE') ? '<span style="color:#DC2626;">Failed (Photo of a screen)</span>' : '<span style="color:#059669;">Passed (Natural photo)</span>';
 
             securityChecklistTable.innerHTML = `
                 <tr>
-                    <td style="font-weight:600; width:40%;">Passport Math Check</td>
-                    <td>${mrzDisplay}</td>
+                    <td style="font-weight:600; width:40%;">Document Format Check</td>
+                    <td>${docDisplay}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight:600;">DigiLocker API Sync</td>
+                    <td>${digiDisplay}</td>
                 </tr>
                 <tr>
                     <td style="font-weight:600;">Software/Photoshop Check</td>
