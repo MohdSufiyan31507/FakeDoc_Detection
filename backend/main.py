@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, Form
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import cv2
 import numpy as np
