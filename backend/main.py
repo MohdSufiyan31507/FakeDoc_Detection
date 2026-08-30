@@ -12,6 +12,7 @@ import re
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
+import mediapipe as mp
 
 app = FastAPI()
 
@@ -180,66 +181,57 @@ def detect_moire_fft(cv_img):
     magnitude_spectrum[cy-30:cy+30, cx-30:cx+30] = 0
     high_freq_energy = np.mean(magnitude_spectrum)
     
-    # Increased threshold from 120 to 180 to reduce false positives on sharp digital scans
     is_recapture = high_freq_energy > 180 
     return "SCREEN_RECAPTURE_DETECTED" if is_recapture else "NATURAL_SURFACE", is_recapture
 
 
 # ==========================================
-# 3. OCR & ID DOCUMENT CLASSIFIER
+# 3. AI FACE EXTRACTION (MediaPipe)
 # ==========================================
-def perform_ocr(cv_img):
-    image_np = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
-    results = ocr_reader.readtext(image_np)
-    extracted_text = [text for (bbox, text, prob) in results if prob > 0.2]
-    return extracted_text
-
 def extract_face(cv_img):
     try:
-        gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
-        gray = cv2.equalizeHist(gray)
-        
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        alt_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_alt2.xml')
-        
-        found_faces = []
-        best_scale = 1.0
-        
-        # Iteratively downscale the image. High-res scans often fail standard cascades.
-        for scale in [1.0, 0.75, 0.5, 0.25]:
-            if scale != 1.0:
-                small_gray = cv2.resize(gray, (0, 0), fx=scale, fy=scale)
-            else:
-                small_gray = gray
-                
-            faces = face_cascade.detectMultiScale(small_gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 30))
-            if len(faces) == 0:
-                faces = alt_cascade.detectMultiScale(small_gray, scaleFactor=1.05, minNeighbors=2, minSize=(20, 20))
-                
-            if len(faces) > 0:
-                found_faces = faces
-                best_scale = scale
-                break
-                
-        if len(found_faces) == 0:
-            return None
+        mp_face_detection = mp.solutions.face_detection
+        with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.2) as face_detection:
+            image_rgb = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+            results = face_detection.process(image_rgb)
             
-        largest_face = max(found_faces, key=lambda rect: rect[2] * rect[3])
-        x, y, w, h = [int(v / best_scale) for v in largest_face]
-        
-        # Increase padding to 20% to capture the whole head/hair
-        pad_y = int(h * 0.25)
-        pad_x = int(w * 0.20)
-        
-        y1, y2 = max(0, y-pad_y), min(cv_img.shape[0], y+h+pad_y)
-        x1, x2 = max(0, x-pad_x), min(cv_img.shape[1], x+w+pad_x)
-        
-        face_img = cv_img[y1:y2, x1:x2]
-        _, buffer = cv2.imencode('.jpg', face_img)
-        return "data:image/jpeg;base64," + base64.b64encode(buffer).decode('utf-8')
+            if not results.detections:
+                # Fallback to model 0 (close up)
+                with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.2) as fd_close:
+                    results = fd_close.process(image_rgb)
+                    if not results.detections:
+                        return None
+                        
+            # Get highest confidence face
+            best_detection = max(results.detections, key=lambda d: d.score[0])
+            bbox = best_detection.location_data.relative_bounding_box
+            
+            h_img, w_img, _ = cv_img.shape
+            
+            x = int(bbox.xmin * w_img)
+            y = int(bbox.ymin * h_img)
+            w = int(bbox.width * w_img)
+            h = int(bbox.height * h_img)
+            
+            # 30% padding for full head/hair
+            pad_y = int(h * 0.30)
+            pad_x = int(w * 0.25)
+            
+            y1 = max(0, y - pad_y)
+            y2 = min(h_img, y + h + pad_y)
+            x1 = max(0, x - pad_x)
+            x2 = min(w_img, x + w + pad_x)
+            
+            face_img = cv_img[y1:y2, x1:x2]
+            _, buffer = cv2.imencode('.jpg', face_img)
+            return "data:image/jpeg;base64," + base64.b64encode(buffer).decode('utf-8')
     except Exception as e:
+        print(f"Face extraction error: {e}")
         return None
 
+# ==========================================
+# 4. MATH VALIDATION ENGINES
+# ==========================================
 def get_mrz_character_value(char):
     if '0' <= char <= '9': return int(char)
     if 'A' <= char <= 'Z': return ord(char) - 55
@@ -252,6 +244,44 @@ def calculate_mrz_checksum(data_str):
     for i, char in enumerate(data_str):
         total += get_mrz_character_value(char) * weights[i % 3]
     return total % 10
+
+# Verhoeff algorithm arrays for Aadhaar Checksum
+verhoeff_d = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
+    [2, 3, 4, 0, 1, 7, 8, 9, 5, 6],
+    [3, 4, 0, 1, 2, 8, 9, 5, 6, 7],
+    [4, 0, 1, 2, 3, 9, 5, 6, 7, 8],
+    [5, 9, 8, 7, 6, 0, 4, 3, 2, 1],
+    [6, 5, 9, 8, 7, 1, 0, 4, 3, 2],
+    [7, 6, 5, 9, 8, 2, 1, 0, 4, 3],
+    [8, 7, 6, 5, 9, 3, 2, 1, 0, 4],
+    [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+]
+verhoeff_p = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    [1, 5, 7, 6, 2, 8, 3, 0, 9, 4],
+    [5, 8, 0, 3, 7, 9, 6, 1, 4, 2],
+    [8, 9, 1, 6, 0, 4, 3, 5, 2, 7],
+    [9, 4, 5, 3, 1, 2, 6, 8, 7, 0],
+    [4, 2, 8, 6, 5, 7, 3, 9, 0, 1],
+    [2, 7, 9, 3, 8, 0, 6, 4, 1, 5],
+    [7, 0, 4, 6, 9, 1, 3, 2, 5, 8]
+]
+
+def validate_verhoeff(num_str):
+    c = 0
+    reversed_num = num_str[::-1]
+    for i, char in enumerate(reversed_num):
+        c = verhoeff_d[c][verhoeff_p[i % 8][int(char)]]
+    return c == 0
+
+
+def perform_ocr(cv_img):
+    image_np = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+    results = ocr_reader.readtext(image_np)
+    extracted_text = [text for (bbox, text, prob) in results if prob > 0.2]
+    return extracted_text
 
 def analyze_document_data(ocr_text_list):
     full_text = " ".join(ocr_text_list).upper()
@@ -274,7 +304,12 @@ def analyze_document_data(ocr_text_list):
         doc_type = "AADHAAR CARD"
         aadhaar_match = re.search(r'\b\d{4}\s?\d{4}\s?\d{4}\b', full_text)
         if aadhaar_match:
-            validation_status, details = "PASS", f"Aadhaar Format Valid: {aadhaar_match.group(0)}"
+            uid_clean = aadhaar_match.group(0).replace(" ", "")
+            # Apply Verhoeff Math verification on the Aadhaar Number
+            if validate_verhoeff(uid_clean):
+                validation_status, details = "PASS", f"Aadhaar Math Verified (Verhoeff Checksum Valid): {uid_clean}"
+            else:
+                validation_status, details = "FAIL", f"Aadhaar Math Failed (Fake/Generated Number Detected)"
         else:
             validation_status, details = "FAIL", "12-Digit UID missing or altered"
             
@@ -360,15 +395,13 @@ async def analyze_document(file: UploadFile = File(...), expected_type: str = Fo
         
         # Cross-Check Expected Type vs Detected Type
         if expected_type and doc_type != "UNKNOWN DOCUMENT":
-            # Normalizing strings to see if expected type matches OCR type
             exp_clean = expected_type.upper().replace(" ", "")
             det_clean = doc_type.upper().replace(" ", "")
-            
             if exp_clean not in det_clean and det_clean not in exp_clean:
                 doc_status = "FAIL"
                 doc_details = f"MISMATCH: Expected {expected_type} but detected a {doc_type}."
         
-        # Biometrics
+        # Biometrics (using MediaPipe)
         extracted_face_b64 = extract_face(doc_img)
         
         # Risk Engine
@@ -394,8 +427,8 @@ async def analyze_document(file: UploadFile = File(...), expected_type: str = Fo
             )
             db.commit()
             
-        # Simulate DigiLocker API response
-        digilocker_status = "PASS" if final_decision == "APPROVED" else "FAIL"
+        # Mock DigiLocker Sync mapping doc_status
+        digilocker_status = "PASS" if doc_status != "FAIL" else "FAIL"
         
         return {
             "status": "success",
