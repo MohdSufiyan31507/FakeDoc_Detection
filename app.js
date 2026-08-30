@@ -282,10 +282,13 @@ document.addEventListener('DOMContentLoaded', () => {
             let docDisplay = docStatus === 'PASS' ? `<span style="color:#059669;">Passed (${docDetails})</span>` : `<span style="color:#DC2626;">Failed (${docDetails})</span>`;
 
             // Make DigiLocker dynamic (Passports don't use DigiLocker, they use ICAO MRZ)
+            // Use expected_type (which card they clicked) to ensure UI stays consistent even if OCR completely fails
+            let isPassportContext = data.doc_type === 'PASSPORT' || data.expected_type === 'PASSPORT';
+            
             let row2Title = "DigiLocker API Sync";
             let row2Display = "";
             
-            if (data.doc_type === 'PASSPORT') {
+            if (isPassportContext) {
                 row2Title = "ICAO 9303 MRZ Cryptography";
                 row2Display = docStatus === 'PASS' 
                     ? '<span style="color:#059669;">MRZ Checksum Math Verified</span>' 

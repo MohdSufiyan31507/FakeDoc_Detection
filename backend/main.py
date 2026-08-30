@@ -396,10 +396,14 @@ async def analyze_document(file: UploadFile = File(...), expected_type: str = Fo
         doc_type, doc_status, doc_details = analyze_document_data(extracted_text_list)
         
         # Cross-Check Expected Type vs Detected Type
-        if expected_type and doc_type != "UNKNOWN DOCUMENT":
+        if expected_type:
             exp_clean = expected_type.upper().replace(" ", "")
             det_clean = doc_type.upper().replace(" ", "")
-            if exp_clean not in det_clean and det_clean not in exp_clean:
+            
+            if doc_type == "UNKNOWN DOCUMENT":
+                doc_status = "FAIL"
+                doc_details = f"MISMATCH: Expected {expected_type} but could not read document."
+            elif exp_clean not in det_clean and det_clean not in exp_clean:
                 doc_status = "FAIL"
                 doc_details = f"MISMATCH: Expected {expected_type} but detected a {doc_type}."
         
@@ -422,7 +426,7 @@ async def analyze_document(file: UploadFile = File(...), expected_type: str = Fo
                 "INSERT INTO documents (doc_id, timestamp, source_type, confidence, decision, is_flagged, doc_type) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (doc_id, timestamp, "REAL_UPLOAD", conf_str, final_decision, is_flagged, doc_type)
             )
-            action_text = f"Analyzed {doc_type} ({file.filename}). RISK: {risk_score:.2f}. ROUTE: {final_decision}"
+            action_text = f"Analyzed {expected_type or doc_type} ({file.filename}). RISK: {risk_score:.2f}. ROUTE: {final_decision}"
             db.execute(
                 "INSERT INTO audit_log (time_str, timestamp, actor, action) VALUES (?, ?, ?, ?)",
                 (time_str, timestamp, "PYTHON_BACKEND", action_text)
@@ -437,6 +441,7 @@ async def analyze_document(file: UploadFile = File(...), expected_type: str = Fo
             "doc_id": doc_id,
             "filename": file.filename,
             "doc_type": doc_type,
+            "expected_type": expected_type,
             "ela_heatmap": "data:image/jpeg;base64," + ela_b64,
             "extracted_face": extracted_face_b64,
             "risk_score": f"{risk_score:.2f}",
