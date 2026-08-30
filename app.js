@@ -229,6 +229,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 riskScoreDesc.innerHTML = "<strong>High Risk (66% - 100%):</strong> Critical fraud signals detected. The document failed major structural checks (e.g., Checksum Math failed), contains photoshopped pixels, or is a photo of a digital screen.";
             }
 
+            // 1.75 DYNAMIC ANOMALY REPORT
+            const anomalyContainer = document.getElementById('anomaly-report-container');
+            if (anomalyContainer) {
+                let anomalies = [];
+                
+                // Document Format / Math Flags
+                if (data.metadata_checks?.doc_validation === 'FAIL') {
+                    anomalies.push(`<strong>Format/Math Failure:</strong> ${data.metadata_checks?.doc_details}`);
+                }
+                // Screen Recapture Flags
+                if (data.metadata_checks?.moire?.includes('SCREEN_RECAPTURE')) {
+                    anomalies.push(`<strong>Screen Recapture:</strong> The image is a photo taken of a digital monitor or smartphone screen.`);
+                }
+                // Software / Photoshop Flags
+                if (data.metadata_checks?.exif?.includes('SOFTWARE_SIG_DETECTED')) {
+                    anomalies.push(`<strong>Metadata Tampering:</strong> Evidence of Photoshop or digital editing software was found inside the file data.`);
+                }
+
+                if (anomalies.length > 0) {
+                    anomalyContainer.style.display = 'block';
+                    anomalyContainer.style.background = rawScore > 0.65 ? '#FEF2F2' : '#FEF3C7';
+                    let titleColor = rawScore > 0.65 ? '#991B1B' : '#92400E';
+                    let liColor = rawScore > 0.65 ? '#7F1D1D' : '#78350F';
+                    
+                    anomalyContainer.innerHTML = `
+                        <strong style="font-size: 0.875rem; color: ${titleColor};">⚠️ Specific Anomalies Detected by AI:</strong>
+                        <ul style="margin: 8px 0 0 20px; font-size: 0.875rem; color: ${liColor}; padding: 0; line-height: 1.6;">
+                            ${anomalies.map(a => `<li style="margin-bottom:4px;">${a}</li>`).join('')}
+                        </ul>
+                    `;
+                } else {
+                    anomalyContainer.style.display = 'block';
+                    anomalyContainer.style.background = '#F0FDF4';
+                    anomalyContainer.innerHTML = `<strong style="font-size: 0.875rem; color: #166534;">✅ No structural or digital anomalies detected.</strong>`;
+                }
+            }
+
             // 2. VISUALS
             forensicImageContainer.innerHTML = `<img src="${data.ela_heatmap}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">`;
             
