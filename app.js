@@ -144,8 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
             
+            // UI Loading State with Animation
             uploadZone.innerHTML = `
-                <p style="font-size: 1.25rem;">Analyzing Document...</p>
+                <div class="loader-spinner"></div>
+                <p style="color:#0F172A; font-size: 1.25rem;">Analyzing Document...</p>
                 <span class="upload-subtext" style="color: #3B82F6;">Running AI Forensics. Do not close the page.</span>
             `;
 
