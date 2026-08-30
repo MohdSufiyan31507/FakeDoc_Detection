@@ -22,6 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const extractedFaceBox = document.getElementById('extracted-face-box');
     const securityChecklistTable = document.getElementById('security-checklist-table');
     const extractedTextTable = document.getElementById('extracted-text-table');
+    
+    // Risk Meter Elements
+    const riskScoreBar = document.getElementById('risk-score-bar');
+    const riskScoreValue = document.getElementById('risk-score-value');
+    const riskScoreDesc = document.getElementById('risk-score-description');
 
     const analysisStore = {};
 
@@ -202,6 +207,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const decision = formatDecision(data.decision);
             finalDecisionBadge.innerHTML = `<span style="font-size:14px; color:#64748B; margin-right:12px;">DETECTED: ${data.doc_type || 'UNKNOWN'}</span> 
                                             <span style="background:${decision.bg}; color:${decision.color}; padding:8px 16px; border-radius:6px; border:1px solid ${decision.color};">${decision.text}</span>`;
+
+            // 1.5 RISK METER
+            let rawScore = parseFloat(data.risk_score || "0");
+            let pct = (rawScore * 100).toFixed(0);
+            
+            riskScoreValue.textContent = `${pct}% Risk`;
+            riskScoreBar.style.width = `${pct}%`;
+            
+            if (rawScore < 0.25) {
+                riskScoreBar.style.background = "#10B981"; // Emerald Green
+                riskScoreValue.style.color = "#10B981";
+                riskScoreDesc.innerHTML = "<strong>Low Risk (0 - 24%):</strong> The document appears authentic. No significant digital tampering, invalid formatting, or screen recaptures were detected.";
+            } else if (rawScore <= 0.65) {
+                riskScoreBar.style.background = "#F59E0B"; // Amber Yellow
+                riskScoreValue.style.color = "#F59E0B";
+                riskScoreDesc.innerHTML = "<strong>Medium Risk (25% - 65%):</strong> Anomalies detected. The document might have slight physical damage, heavy compression, or formatting discrepancies. Manual review is recommended.";
+            } else {
+                riskScoreBar.style.background = "#EF4444"; // Red
+                riskScoreValue.style.color = "#EF4444";
+                riskScoreDesc.innerHTML = "<strong>High Risk (66% - 100%):</strong> Critical fraud signals detected. The document failed major structural checks (e.g., Checksum Math failed), contains photoshopped pixels, or is a photo of a digital screen.";
+            }
 
             // 2. VISUALS
             forensicImageContainer.innerHTML = `<img src="${data.ela_heatmap}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">`;
