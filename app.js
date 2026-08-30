@@ -202,6 +202,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isReal && analysisStore[docId]) {
             const data = analysisStore[docId];
             
+            // Handle Manual Override Visibility
+            const overrideContainer = document.getElementById('manual-override-actions');
+            const overrideDesc = document.getElementById('override-desc-text');
+            if (overrideContainer && overrideDesc) {
+                if (data.manual_override) {
+                    overrideContainer.style.display = 'none';
+                    overrideDesc.innerText = "An administrator has manually overridden this document. The action is permanently logged.";
+                } else {
+                    overrideContainer.style.display = 'flex';
+                    overrideDesc.innerText = "Override the AI's decision. This action will be logged in the system history.";
+                }
+            }
+            
             // 1. TOP BADGE & TYPE
             const decision = formatDecision(data.decision);
             finalDecisionBadge.innerHTML = `<span style="font-size:14px; color:#64748B; margin-right:12px;">DETECTED: ${data.doc_type || 'UNKNOWN'}</span> 
@@ -351,6 +364,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const docId = reportIdSpan.textContent;
         if (!docId || docId === "--") return;
 
+        const actionText = decision === 'APPROVED' ? 'Approve' : 'Reject';
+        if (!confirm(`Are you sure you want to manually ${actionText} this document?\n\nThis action will override the AI's decision and be permanently logged.`)) {
+            return;
+        }
+
         try {
             const res = await fetch('http://localhost:8000/api/override', {
                 method: 'POST',
@@ -363,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Update local memory
                 if (analysisStore[docId]) {
                     analysisStore[docId].decision = decision;
+                    analysisStore[docId].manual_override = true;
                 }
                 // Refresh UI
                 openDetailedAnalysis(docId, true);
