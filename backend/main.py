@@ -12,7 +12,6 @@ import re
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
-import mediapipe as mp
 
 app = FastAPI()
 
@@ -183,50 +182,44 @@ def detect_moire_fft(cv_img):
 # ==========================================
 def extract_face(cv_img):
     try:
-        mp_face_detection = mp.solutions.face_detection
-        with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.1) as face_detection:
-            image_rgb = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
-            results = face_detection.process(image_rgb)
+        gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+        
+        # 1. Try OpenCV Haar Cascades
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+        
+        if len(faces) == 0:
+            face_cascade_alt = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_alt2.xml')
+            faces = face_cascade_alt.detectMultiScale(gray, 1.1, 4)
             
-            if not results.detections:
-                # Fallback to model 0 (close up)
-                with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.1) as fd_close:
-                    results = fd_close.process(image_rgb)
-                        
-            if results and results.detections:
-                # Get highest confidence face
-                best_detection = max(results.detections, key=lambda d: d.score[0])
-                bbox = best_detection.location_data.relative_bounding_box
-                
-                h_img, w_img, _ = cv_img.shape
-                
-                x = int(bbox.xmin * w_img)
-                y = int(bbox.ymin * h_img)
-                w = int(bbox.width * w_img)
-                h = int(bbox.height * h_img)
-                
-                # 30% padding for full head/hair
-                pad_y = int(h * 0.30)
-                pad_x = int(w * 0.25)
-                
-                y1 = max(0, y - pad_y)
-                y2 = min(h_img, y + h + pad_y)
-                x1 = max(0, x - pad_x)
-                x2 = min(w_img, x + w + pad_x)
-                
-                face_img = cv_img[y1:y2, x1:x2]
-            else:
-                # GEOMETRIC FALLBACK: If no face is found (e.g. dummy ID with blank silhouette),
-                # forcefully crop the left 30% of the image where the Aadhaar face usually is.
-                h_img, w_img, _ = cv_img.shape
-                y1 = int(h_img * 0.20)
-                y2 = int(h_img * 0.85)
-                x1 = int(w_img * 0.02)
-                x2 = int(w_img * 0.30)
-                face_img = cv_img[y1:y2, x1:x2]
+        if len(faces) > 0:
+            # Get largest face found
+            faces = sorted(faces, key=lambda f: f[2]*f[3], reverse=True)
+            x, y, w, h = faces[0]
+            
+            # Padding for hair/chin
+            pad_y = int(h * 0.30)
+            pad_x = int(w * 0.25)
+            h_img, w_img, _ = cv_img.shape
+            
+            y1 = max(0, y - pad_y)
+            y2 = min(h_img, y + h + pad_y)
+            x1 = max(0, x - pad_x)
+            x2 = min(w_img, x + w + pad_x)
+            
+            face_img = cv_img[y1:y2, x1:x2]
+        else:
+            # 2. GEOMETRIC FALLBACK: If face AI fails (e.g. blank template or heavy watermarks),
+            # forcefully crop the left region where ID photos are universally located.
+            h_img, w_img, _ = cv_img.shape
+            y1 = int(h_img * 0.15)
+            y2 = int(h_img * 0.85)
+            x1 = int(w_img * 0.02)
+            x2 = int(w_img * 0.35)
+            face_img = cv_img[y1:y2, x1:x2]
 
-            _, buffer = cv2.imencode('.jpg', face_img)
-            return "data:image/jpeg;base64," + base64.b64encode(buffer).decode('utf-8')
+        _, buffer = cv2.imencode('.jpg', face_img)
+        return "data:image/jpeg;base64," + base64.b64encode(buffer).decode('utf-8')
     except Exception as e:
         print(f"Face extraction error: {e}")
         return None
