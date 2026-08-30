@@ -43,6 +43,11 @@ def init_db():
         cursor.execute("ALTER TABLE documents ADD COLUMN doc_type TEXT")
     except:
         pass
+        
+    try:
+        cursor.execute("ALTER TABLE documents ADD COLUMN is_overridden BOOLEAN DEFAULT 0")
+    except:
+        pass
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS audit_log (
@@ -66,6 +71,20 @@ def get_db():
         yield conn
     finally:
         conn.close()
+
+class OverrideRequest(BaseModel):
+    doc_id: str
+    decision: str
+
+@app.post("/api/override")
+def manual_override(req: OverrideRequest):
+    with get_db() as db:
+        db.execute("""
+            UPDATE documents 
+            SET decision = ?, is_flagged = ?, is_overridden = 1
+            WHERE doc_id = ?
+        """, (req.decision, 1 if req.decision != 'APPROVED' else 0, req.doc_id))
+        db.commit()
 
 
 # ==========================================

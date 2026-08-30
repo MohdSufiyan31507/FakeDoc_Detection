@@ -74,12 +74,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     let srcName = doc.source_type === 'REAL_UPLOAD' ? 'Manual Upload' : 'Background Scan';
                     let srcColor = doc.source_type === 'REAL_UPLOAD' ? 'color:#3B82F6; font-weight:bold;' : '';
                     
+                    let overrideBadge = doc.is_overridden ? `<span style="font-size: 0.75rem; background: #64748B; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">MANUAL OVERRIDE</span>` : '';
+                    
                     tr.innerHTML = `
                         <td>${doc.doc_id}</td>
                         <td>${doc.timestamp}</td>
                         <td style="${srcColor}">${srcName}</td>
                         <td>${doc.confidence}</td>
-                        <td style="color: ${decision.color}; font-weight: bold;">${decision.text}</td>
+                        <td style="color: ${decision.color}; font-weight: bold;">
+                            ${decision.text} ${overrideBadge}
+                        </td>
                     `;
                     tr.addEventListener('click', () => openDetailedAnalysis(doc.doc_id, doc.source_type === 'REAL_UPLOAD'));
                     tbody.appendChild(tr);
