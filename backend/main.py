@@ -395,6 +395,11 @@ def calculate_final_risk(confidence, doc_status, has_bad_exif, is_recapture):
     if doc_status == "FAIL":
         total_risk = 1.00
         
+    # ZERO-NOISE MODE: If all tests perfectly passed, clear out the baseline ELA noise.
+    # This ensures a satisfying "0% Risk" score for perfectly clean documents.
+    if doc_status != "FAIL" and not has_bad_exif and not is_recapture and total_risk < 0.20:
+        total_risk = 0.00
+        
     if total_risk > 1.0:
         total_risk = 1.0
         
