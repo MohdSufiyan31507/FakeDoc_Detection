@@ -281,8 +281,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const docDetails = data.metadata_checks?.doc_details || '';
             let docDisplay = docStatus === 'PASS' ? `<span style="color:#059669;">Passed (${docDetails})</span>` : `<span style="color:#DC2626;">Failed (${docDetails})</span>`;
 
-            const digilockerStatus = data.metadata_checks?.digilocker || 'NOT_FOUND';
-            let digiDisplay = digilockerStatus === 'PASS' ? '<span style="color:#059669;">Verified with UIDAI/DigiLocker</span>' : '<span style="color:#DC2626;">UIDAI/DigiLocker Verification Failed</span>';
+            // Make DigiLocker dynamic (Passports don't use DigiLocker, they use ICAO MRZ)
+            let row2Title = "DigiLocker API Sync";
+            let row2Display = "";
+            
+            if (data.doc_type === 'PASSPORT') {
+                row2Title = "ICAO 9303 MRZ Cryptography";
+                row2Display = docStatus === 'PASS' 
+                    ? '<span style="color:#059669;">MRZ Checksum Math Verified</span>' 
+                    : '<span style="color:#DC2626;">MRZ Checksum Failed (Tampering Detected)</span>';
+            } else {
+                const digilockerStatus = data.metadata_checks?.digilocker || 'NOT_FOUND';
+                row2Display = digilockerStatus === 'PASS' 
+                    ? '<span style="color:#059669;">Verified with UIDAI/DigiLocker</span>' 
+                    : '<span style="color:#DC2626;">UIDAI/DigiLocker Verification Failed</span>';
+            }
 
             const exifDetails = data.metadata_checks?.exif || 'NOT_FOUND';
             let exifDisplay = exifDetails.includes('SOFTWARE_SIG_DETECTED') ? '<span style="color:#DC2626;">Failed (Photoshopped)</span>' : '<span style="color:#059669;">Passed (Original File)</span>';
@@ -296,8 +309,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${docDisplay}</td>
                 </tr>
                 <tr>
-                    <td style="font-weight:600;">DigiLocker API Sync</td>
-                    <td>${digiDisplay}</td>
+                    <td style="font-weight:600;">${row2Title}</td>
+                    <td>${row2Display}</td>
                 </tr>
                 <tr>
                     <td style="font-weight:600;">Software/Photoshop Check</td>
