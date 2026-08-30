@@ -99,6 +99,7 @@ def preprocess_document(image_bytes):
     nparr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     
+    # 1. CLAHE Contrast Enhancement
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
@@ -106,20 +107,12 @@ def preprocess_document(image_bytes):
     limg = cv2.merge((cl,a,b))
     img_clahe = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
     
+    # 2. Denoising
     img_clean = cv2.fastNlMeansDenoisingColored(img_clahe, None, 10, 10, 7, 21)
     
-    gray = cv2.cvtColor(img_clean, cv2.COLOR_BGR2GRAY)
-    edged = cv2.Canny(cv2.GaussianBlur(gray, (5, 5), 0), 75, 200)
-    contours, _ = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
-    
+    # Bypass aggressive perspective cropping, as it frequently crops out faces
+    # if the uploaded image is already cropped (like a downloaded template).
     doc_img = img_clean
-    for c in contours:
-        peri = cv2.arcLength(c, True)
-        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
-        if len(approx) == 4 and cv2.contourArea(approx) > (img.shape[0]*img.shape[1]*0.3):
-            doc_img = four_point_transform(img_clean, approx.reshape(4, 2))
-            break
             
     return doc_img, img
 
