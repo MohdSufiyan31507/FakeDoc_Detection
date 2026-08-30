@@ -114,8 +114,8 @@ def preprocess_document(image_bytes):
     limg = cv2.merge((cl,a,b))
     img_clahe = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
     
-    # 2. Denoising
-    img_clean = cv2.fastNlMeansDenoisingColored(img_clahe, None, 10, 10, 7, 21)
+    # 2. Denoising (SPEED FIX: Replaced insanely slow NLMeans with lightning-fast Median Blur)
+    img_clean = cv2.medianBlur(img_clahe, 3)
     
     # Bypass aggressive perspective cropping, as it frequently crops out faces
     # if the uploaded image is already cropped (like a downloaded template).
