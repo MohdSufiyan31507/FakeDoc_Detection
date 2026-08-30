@@ -98,6 +98,14 @@ def preprocess_document(image_bytes):
     nparr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     
+    # SPEED OPTIMIZATION: Resize huge photos to a max width of 1200px.
+    # This prevents the Denoising and OCR engines from taking 10+ seconds on 4K smartphone photos.
+    max_width = 1200
+    h, w = img.shape[:2]
+    if w > max_width:
+        ratio = max_width / float(w)
+        img = cv2.resize(img, (max_width, int(h * ratio)), interpolation=cv2.INTER_AREA)
+    
     # 1. CLAHE Contrast Enhancement
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
