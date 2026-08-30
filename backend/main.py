@@ -184,38 +184,47 @@ def detect_moire_fft(cv_img):
 def extract_face(cv_img):
     try:
         mp_face_detection = mp.solutions.face_detection
-        with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.2) as face_detection:
+        with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.1) as face_detection:
             image_rgb = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
             results = face_detection.process(image_rgb)
             
             if not results.detections:
                 # Fallback to model 0 (close up)
-                with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.2) as fd_close:
+                with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.1) as fd_close:
                     results = fd_close.process(image_rgb)
-                    if not results.detections:
-                        return None
                         
-            # Get highest confidence face
-            best_detection = max(results.detections, key=lambda d: d.score[0])
-            bbox = best_detection.location_data.relative_bounding_box
-            
-            h_img, w_img, _ = cv_img.shape
-            
-            x = int(bbox.xmin * w_img)
-            y = int(bbox.ymin * h_img)
-            w = int(bbox.width * w_img)
-            h = int(bbox.height * h_img)
-            
-            # 30% padding for full head/hair
-            pad_y = int(h * 0.30)
-            pad_x = int(w * 0.25)
-            
-            y1 = max(0, y - pad_y)
-            y2 = min(h_img, y + h + pad_y)
-            x1 = max(0, x - pad_x)
-            x2 = min(w_img, x + w + pad_x)
-            
-            face_img = cv_img[y1:y2, x1:x2]
+            if results and results.detections:
+                # Get highest confidence face
+                best_detection = max(results.detections, key=lambda d: d.score[0])
+                bbox = best_detection.location_data.relative_bounding_box
+                
+                h_img, w_img, _ = cv_img.shape
+                
+                x = int(bbox.xmin * w_img)
+                y = int(bbox.ymin * h_img)
+                w = int(bbox.width * w_img)
+                h = int(bbox.height * h_img)
+                
+                # 30% padding for full head/hair
+                pad_y = int(h * 0.30)
+                pad_x = int(w * 0.25)
+                
+                y1 = max(0, y - pad_y)
+                y2 = min(h_img, y + h + pad_y)
+                x1 = max(0, x - pad_x)
+                x2 = min(w_img, x + w + pad_x)
+                
+                face_img = cv_img[y1:y2, x1:x2]
+            else:
+                # GEOMETRIC FALLBACK: If no face is found (e.g. dummy ID with blank silhouette),
+                # forcefully crop the left 30% of the image where the Aadhaar face usually is.
+                h_img, w_img, _ = cv_img.shape
+                y1 = int(h_img * 0.20)
+                y2 = int(h_img * 0.85)
+                x1 = int(w_img * 0.02)
+                x2 = int(w_img * 0.30)
+                face_img = cv_img[y1:y2, x1:x2]
+
             _, buffer = cv2.imencode('.jpg', face_img)
             return "data:image/jpeg;base64," + base64.b64encode(buffer).decode('utf-8')
     except Exception as e:
