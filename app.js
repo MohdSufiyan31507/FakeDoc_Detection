@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const reportIdSpan = document.getElementById('report-id');
     const finalDecisionBadge = document.getElementById('final-decision-badge');
     const forensicImageContainer = document.getElementById('forensic-image-container');
-    const extractedFaceBox = document.getElementById('extracted-face-box');
     const securityChecklistTable = document.getElementById('security-checklist-table');
     const extractedTextTable = document.getElementById('extracted-text-table');
     
@@ -267,14 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 2. VISUALS
-            forensicImageContainer.innerHTML = `<img src="${data.ela_heatmap}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">`;
-            
-            if (data.extracted_face) {
-                extractedFaceBox.innerHTML = `<img src="${data.extracted_face}" style="max-width:100%; max-height:100%; object-fit:cover; border-radius:8px;">`;
-                extractedFaceBox.style.border = "none";
-            } else {
-                extractedFaceBox.innerHTML = `No Face Found`;
-            }
+            forensicImageContainer.innerHTML = `<img src="${data.ela_heatmap}" style="width:100%; height:100%; object-fit:contain; border-radius:8px;">`;
 
             // 3. SECURITY CHECKLIST (Dynamic Multi-ID)
             const docStatus = data.metadata_checks?.doc_validation || 'NOT_FOUND';
