@@ -375,13 +375,21 @@ def analyze_document_data(ocr_text_list):
 # 6. SCORING & AGGREGATION ENGINE
 # ==========================================
 def calculate_final_risk(confidence, doc_status, has_bad_exif, is_recapture):
-    ela_risk = (100 - confidence) / 100 * 0.40
+    ela_risk = (100 - confidence) / 100 * 0.40  # Max 0.40
     doc_risk = 0.40 if doc_status == "FAIL" else 0.0
     exif_risk = 0.10 if has_bad_exif else 0.0
     moire_risk = 0.10 if is_recapture else 0.0
     
     total_risk = ela_risk + doc_risk + exif_risk + moire_risk
     
+    # STRICT MODE: If the mathematical checksum of the ID fails, it is 100% undeniably fake.
+    # We forcefully spike the risk score to exactly 1.00 (100%) for maximum impact.
+    if doc_status == "FAIL":
+        total_risk = 1.00
+        
+    if total_risk > 1.0:
+        total_risk = 1.0
+        
     if total_risk > 0.65:
         return total_risk, "REJECTED"
     elif total_risk >= 0.25:
