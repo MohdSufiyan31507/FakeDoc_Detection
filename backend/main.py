@@ -197,18 +197,33 @@ def perform_ocr(cv_img):
 def extract_face(cv_img):
     try:
         gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
         
+        # ID cards often have low contrast or faded faces. 
+        # Equalizing the histogram forces the face features to pop out more for the AI.
+        gray = cv2.equalizeHist(gray)
+        
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        alt_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_alt2.xml')
+        
+        # 1. Try standard detection
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 30))
+        
+        # 2. Fallback to aggressive detection with alt2 model if the first fails
+        if len(faces) == 0:
+            faces = alt_cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=2, minSize=(20, 20))
+            
         if len(faces) == 0:
             return None
             
         largest_face = max(faces, key=lambda rect: rect[2] * rect[3])
         x, y, w, h = largest_face
         
-        pad = int(w * 0.1)
-        y1, y2 = max(0, y-pad), min(cv_img.shape[0], y+h+pad)
-        x1, x2 = max(0, x-pad), min(cv_img.shape[1], x+w+pad)
+        # Increase padding to 20% to capture the whole head/hair instead of just the tight face mask
+        pad_y = int(h * 0.25)
+        pad_x = int(w * 0.20)
+        
+        y1, y2 = max(0, y-pad_y), min(cv_img.shape[0], y+h+pad_y)
+        x1, x2 = max(0, x-pad_x), min(cv_img.shape[1], x+w+pad_x)
         
         face_img = cv_img[y1:y2, x1:x2]
         _, buffer = cv2.imencode('.jpg', face_img)
