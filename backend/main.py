@@ -454,6 +454,34 @@ async def analyze_document(file: UploadFile = File(...), expected_type: str = Fo
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+from pydantic import BaseModel
+class OverrideRequest(BaseModel):
+    doc_id: str
+    decision: str
+
+@app.post("/api/override")
+def override_decision(req: OverrideRequest):
+    try:
+        is_flagged = 1 if req.decision != "APPROVED" else 0
+        now = datetime.now()
+        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+        time_str = now.strftime("%H:%M:%S")
+        
+        with get_db() as db:
+            db.execute(
+                "UPDATE documents SET decision = ?, is_flagged = ? WHERE doc_id = ?",
+                (req.decision, is_flagged, req.doc_id)
+            )
+            action_text = f"Admin manually OVERRODE decision to {req.decision} for {req.doc_id}"
+            db.execute(
+                "INSERT INTO audit_log (time_str, timestamp, actor, action) VALUES (?, ?, ?, ?)",
+                (time_str, timestamp, "ADMIN_USER", action_text)
+            )
+            db.commit()
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/api/stream")
 def get_stream():
     with get_db() as db:

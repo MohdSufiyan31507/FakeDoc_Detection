@@ -297,4 +297,41 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardView.classList.add('hidden');
         detailedAnalysis.classList.remove('hidden');
     }
+
+    // --- MANUAL OVERRIDE LOGIC ---
+    const btnManualApprove = document.getElementById('btn-manual-approve');
+    const btnManualReject = document.getElementById('btn-manual-reject');
+
+    async function handleOverride(decision) {
+        const docId = reportIdSpan.textContent;
+        if (!docId || docId === "--") return;
+
+        try {
+            const res = await fetch('http://localhost:8000/api/override', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({doc_id: docId, decision: decision})
+            });
+            const result = await res.json();
+            
+            if (result.status === 'success') {
+                // Update local memory
+                if (analysisStore[docId]) {
+                    analysisStore[docId].decision = decision;
+                }
+                // Refresh UI
+                openDetailedAnalysis(docId, true);
+                await refreshData();
+                alert(`Success: Document manually overridden to ${decision}`);
+            } else {
+                alert("Override failed: " + result.message);
+            }
+        } catch (e) {
+            console.error("Override error:", e);
+            alert("Connection error. Ensure the backend is running.");
+        }
+    }
+
+    if (btnManualApprove) btnManualApprove.addEventListener('click', () => handleOverride('APPROVED'));
+    if (btnManualReject) btnManualReject.addEventListener('click', () => handleOverride('REJECTED'));
 });

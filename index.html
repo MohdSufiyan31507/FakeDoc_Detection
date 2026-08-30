@@ -150,6 +150,18 @@
                             Scanning document to determine fraud risk...
                         </p>
                     </div>
+
+                    <!-- ADMIN MANUAL OVERRIDE -->
+                    <div class="pane" style="background: white; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="font-size: 1rem; font-weight: 600; color: #0F172A; margin: 0 0 4px 0;">Manual Review Override</h3>
+                            <p style="font-size: 0.875rem; color: #64748B; margin: 0;">Override the AI's decision. This action will be logged in the system history.</p>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <button id="btn-manual-approve" class="util-btn" style="background: #10B981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">✓ Approve</button>
+                            <button id="btn-manual-reject" class="util-btn" style="background: #EF4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">✕ Reject</button>
+                        </div>
+                    </div>
                     
                     <!-- VISUAL EVIDENCE SECTION -->
                     <div class="pane" style="display: flex; gap: 24px;">
